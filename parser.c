@@ -8,7 +8,7 @@ int
 main(void) {
 	FILE * file;
 	
-	file = fopen("archivo.txt","r");
+	file = fopen("/home/facundo/tp1so/archivo.txt","r");
 	if(file == NULL) {
 		printf("File couldn't be opened/n");
 		exit(1);
@@ -36,7 +36,7 @@ parse(FILE * file) {
 	char * string = malloc(sizeof(char) * BLOQUE);
 	char * aux;
 	int index = 0;
-	int c, i;
+	int c, i, N, mult;
 	Commands com = empty;
 	
 	while((c = fgetc(file)) != EOF) {
@@ -46,7 +46,7 @@ parse(FILE * file) {
 				(vecBalance.numbers)[vecBalance.pos] = c;
 				//checkCommand(string, index);
 				for(i = 0; i < index; i++) {
-					toupper(string[i]);
+					string[i] = toupper(string[i]);
 				}	
 				if(strcmp(string, "INC") == 0) {
 					com = inc;
@@ -74,6 +74,7 @@ parse(FILE * file) {
 				break;
 			case ')': 
 				if(vecBalance.numbers[vecBalance.pos] != '(') {
+					fprintf(stderr, "Parser invalido\n");
 					exit(1);
 				}
 				if(index == 0) {
@@ -89,29 +90,61 @@ parse(FILE * file) {
 					} else if(com == mr) {
 					  
 					} else if(com == ml) {
-				  
-				  
-				  
+						
+					} else if(com == endif){
+						N = 0;
+						mult = 1;
+						
+						for(i = index - 1; i >=0 ; i--){
+							if(!string[i] >= '0' || !string[i] <= '9'){
+								fprintf(stderr, "Parser invalido\n");
+								exit(1);
+							}
+							N += ((string[i]-'0')*mult);
+							mult *= 10;
+						}	
+						if(vecIf.numbers[(vecIf.pos)-1] != N){
+							fprintf(stderr, "Parser invalido\n");
+							exit(1);
+						}
+						(vecIf.pos) -= 1;
+					} else if(com == endwhile) {
+						N = 0;
+						mult = 1;
+						
+						for(i = index - 1; i >=0 ; i--){
+							if(!string[i] >= '0' || !string[i] <= '9'){
+								fprintf(stderr, "Parser invalido\n");
+								exit(1);
+							}
+							N += ((string[i]-'0')*mult);
+							mult *= 10;
+						}	
+						if(vecWhile.numbers[(vecWhile.pos)-1] != N){
+							fprintf(stderr, "Parser invalido\n");
+							exit(1);
+						}
+						(vecWhile.pos) -= 1;
+					} else if(com == cz) {
+						fprintf(stderr, "Parser invalido\n");
+						exit(1);
+					}
+					vecBalance.numbers[vecBalance.pos] = 0;
+					index = 0;
 				}
-				} else if(com == inc && index != 0) {
-				  
-				  
-				} else if(
-				vecBalance.numbers[vecBalance.pos] = 0;
-				index = 0;
 				break;
 			case ',':
 				if(index != 0 && (com == ifa || com == whilea)) {
 					if(com == ifa) {
 						vecIf.numbers = resizeMemInt(vecIf.pos, vecIf.numbers);
 						aux = malloc(sizeof(char) * (index - 1));
-						hasNumbers(vecIf.numbers);
-						vecIf.numbers[(vecIf.pos)++] = atoi(strncpy(aux ,string,index - 1));
+						hasNumbers(string, index);
+						vecIf.numbers[(vecIf.pos)++] = atoi(strncpy(aux ,string,index - 1)); //error hay que hace la funcion para convertir a numero
 						parse(file);
 					} else {
 						vecWhile.numbers = resizeMemInt(vecWhile.pos, vecWhile.numbers);
 						aux = malloc(sizeof(char) * (index - 1));
-						hasNumbers(vecWhile.numbers);
+						hasNumbers(string, index);
 						vecWhile.numbers[(vecWhile.pos)++] = atoi(strncpy(aux,string,index - 1));
 						parse(file);
 					}
@@ -126,6 +159,10 @@ parse(FILE * file) {
 				string[index++] = c;
 				break;
 		}
+	}
+	if(vecBalance.numbers[vecBalance.pos] != 0) {
+		fprintf(stderr, "Parser invalido\n");
+		exit(1);
 	}
 }
 
@@ -190,7 +227,7 @@ resizeMemInt(int index, int * vec) {
 }
 
 void
-hasNumbers(int * vec, int dim) {
+hasNumbers(char * vec, int dim) {
 	int i;
 	for(i = 0; i < dim; i++) {
 		if(!isdigit(vec[i])) {
