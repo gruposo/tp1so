@@ -3,27 +3,29 @@
 #include <ctype.h>
 #include <string.h>
 #include "parser.h"
+#include "nodeADT.h"
 
-int 
-main(void) {
+int main(void) {
 	FILE * file;
-	
-	file = fopen("/home/facundo/tp1so/archivo.txt","r");
-	if(file == NULL) {
+	nodeADT first;
+
+	file = fopen("/home/facundo/tp1so/archivo.txt", "r");
+	if (file == NULL) {
 		printf("File couldn't be opened/n");
 		exit(1);
 	}
-	
-	if(!feof(file)) {
-		parse(file);
+
+	if (!feof(file)) {
+		first = parse(file, FALSE);
 	}
-	
+
 	fclose(file);
 	return 0;
 }
-
-void
-parse(FILE * file) {
+//distinguir entre recursivas y no recursivas, ver de acuerdo a eso si cortar el algoritmo por error o simplemente volver a la anterior.
+nodeADT parse(FILE * file, int state) {
+	nodeADT first;
+	nodeADT current;
 	tNumbers vecWhile;
 	tNumbers vecIf;
 	tNumbers vecBalance;
@@ -31,182 +33,140 @@ parse(FILE * file) {
 	vecWhile.pos = 0;
 	vecIf.numbers = malloc(sizeof(int) * BLOQUE);
 	vecIf.pos = 0;
-	vecBalance.numbers = calloc(sizeof(int),BLOQUE);
+	vecBalance.numbers = calloc(sizeof(int), BLOQUE);
 	vecBalance.pos = 0;
 	char * string = malloc(sizeof(char) * BLOQUE);
-	char * aux;
 	int index = 0;
-	int c, i, N, mult;
+	int c, i;
 	Commands com = empty;
-	
-	while((c = fgetc(file)) != EOF) {
-		switch(c) {
-			case '(': 
-				vecBalance.numbers = resizeMemInt(vecBalance.pos, vecBalance.numbers);
-				(vecBalance.numbers)[vecBalance.pos] = c;
-				//checkCommand(string, index);
-				for(i = 0; i < index; i++) {
-					string[i] = toupper(string[i]);
-				}	
-				if(strcmp(string, "INC") == 0) {
-					com = inc;
-				} else if(strcmp(string, "DEC") == 0) {
-					com = dec;
-				} else if(strcmp(string, "MR") == 0) {
-					com = mr;
-				} else if(strcmp(string, "ML") == 0) {
-					com = ml;
-				} else if(strcmp(string, "CZ") == 0) {
-					com = cz;
-				} else if(strcmp(string, "IF") == 0) {
-					com = ifa;
-				} else if(strcmp(string, "ENDIF") == 0) {
-					com = endif;
-				} else if(strcmp(string, "WHILE") == 0) {
-					com = whilea;
-				} else if(strcmp(string, "ENDWHILE") == 0) {
-					com = endwhile;
+	int isFirst = TRUE;
+
+	while ((c = fgetc(file)) != EOF) {
+		switch (c) {
+		case '(':
+			vecBalance.numbers = resizeMemInt(vecBalance.pos,
+					vecBalance.numbers);
+			(vecBalance.numbers)[vecBalance.pos] = c;
+			for (i = 0; i < index; i++) {
+				string[i] = toupper(string[i]);
+			}
+			if (strcmp(string, "INC") == 0) {
+				com = inc;
+			} else if (strcmp(string, "DEC") == 0) {
+				com = dec;
+			} else if (strcmp(string, "MR") == 0) {
+				com = mr;
+			} else if (strcmp(string, "ML") == 0) {
+				com = ml;
+			} else if (strcmp(string, "CZ") == 0) {
+				com = cz;
+			} else if (strcmp(string, "IF") == 0) {
+				com = ifa;
+			} else if (strcmp(string, "ENDIF") == 0) {
+				com = endif;
+			} else if (strcmp(string, "WHILE") == 0) {
+				com = whilea;
+			} else if (strcmp(string, "ENDWHILE") == 0) {
+				com = endwhile;
+			} else {
+				fprintf(stderr, "Parser invalido\n");
+				exit(1);
+			}
+
+			if(isFirst){
+				first = newNode(com);
+
+				isFirst = FALSE;
+			}
+
+			current = newNode(com);
+			index = 0;
+			break;
+		case ')':
+			if (vecBalance.numbers[vecBalance.pos] != '(') {
+				if (state) {
+					fseek(file, -1, SEEK_CUR);
+					return current;
 				} else {
 					fprintf(stderr, "Parser invalido\n");
 					exit(1);
 				}
+			}
+			if (index == 0) {
+				if (com != cz) {
+					fprintf(stderr, "Parser invalido\n");
+					exit(1);
+				}
+			} else {
+				if (com == endif) {
+					if (vecIf.numbers[(vecIf.pos) - 1] != toInt(string, index)) {
+						fprintf(stderr, "Parser invalido\n");
+						exit(1);
+					}
+					(vecIf.pos) -= 1;
+				} else if (com == endwhile) {
+					if (vecWhile.numbers[(vecWhile.pos) - 1] != toInt(string, index)) {
+						fprintf(stderr, "Parser invalido\n");
+						exit(1);
+					}
+					(vecWhile.pos) -= 1;
+				} else if (com == cz) {
+					fprintf(stderr, "Parser invalido\n");
+					exit(1);
+				} else {
+					hasNumbers(string,index);
+				}
+				vecBalance.numbers[vecBalance.pos] = 0;
 				index = 0;
-				break;
-			case ')': 
-				if(vecBalance.numbers[vecBalance.pos] != '(') {
-					fprintf(stderr, "Parser invalido\n");
-					exit(1);
-				}
-				if(index == 0) {
-					if(com != cz) {
-						fprintf(stderr, "Parser invalido\n");
-						exit(1);
-					}  
+			}
+			break;
+		case ',':
+			if (index != 0 && (com == ifa || com == whilea)) {
+				if (com == ifa) {
+					vecIf.numbers = resizeMemInt(vecIf.pos, vecIf.numbers);
+					hasNumbers(string, index);
+					vecIf.numbers[(vecIf.pos)++] = toInt(string, index);
+					addCondList(current,parse(file, TRUE));
 				} else {
-					if(com == inc) {
-					  
-					} else if(com == dec) {
-					  
-					} else if(com == mr) {
-					  
-					} else if(com == ml) {
-						
-					} else if(com == endif){
-						N = 0;
-						mult = 1;
-						
-						for(i = index - 1; i >=0 ; i--){
-							if(!string[i] >= '0' || !string[i] <= '9'){
-								fprintf(stderr, "Parser invalido\n");
-								exit(1);
-							}
-							N += ((string[i]-'0')*mult);
-							mult *= 10;
-						}	
-						if(vecIf.numbers[(vecIf.pos)-1] != N){
-							fprintf(stderr, "Parser invalido\n");
-							exit(1);
-						}
-						(vecIf.pos) -= 1;
-					} else if(com == endwhile) {
-						N = 0;
-						mult = 1;
-						
-						for(i = index - 1; i >=0 ; i--){
-							if(!string[i] >= '0' || !string[i] <= '9'){
-								fprintf(stderr, "Parser invalido\n");
-								exit(1);
-							}
-							N += ((string[i]-'0')*mult);
-							mult *= 10;
-						}	
-						if(vecWhile.numbers[(vecWhile.pos)-1] != N){
-							fprintf(stderr, "Parser invalido\n");
-							exit(1);
-						}
-						(vecWhile.pos) -= 1;
-					} else if(com == cz) {
-						fprintf(stderr, "Parser invalido\n");
-						exit(1);
-					}
-					vecBalance.numbers[vecBalance.pos] = 0;
-					index = 0;
+					vecWhile.numbers = resizeMemInt(vecWhile.pos,
+							vecWhile.numbers);
+					hasNumbers(string, index);
+					vecWhile.numbers[(vecWhile.pos)++] = toInt(string, index);
+					addCondList(current, parse(file, TRUE));
 				}
-				break;
-			case ',':
-				if(index != 0 && (com == ifa || com == whilea)) {
-					if(com == ifa) {
-						vecIf.numbers = resizeMemInt(vecIf.pos, vecIf.numbers);
-						aux = malloc(sizeof(char) * (index - 1));
-						hasNumbers(string, index);
-						vecIf.numbers[(vecIf.pos)++] = atoi(strncpy(aux ,string,index - 1)); //error hay que hace la funcion para convertir a numero
-						parse(file);
-					} else {
-						vecWhile.numbers = resizeMemInt(vecWhile.pos, vecWhile.numbers);
-						aux = malloc(sizeof(char) * (index - 1));
-						hasNumbers(string, index);
-						vecWhile.numbers[(vecWhile.pos)++] = atoi(strncpy(aux,string,index - 1));
-						parse(file);
-					}
-				} else {
-					fprintf(stderr, "Parser invalido\n");
-					exit(1);
-				}
-				break;
-			case ' ': case '\n': case '\t': break;
-			default: 
-				string = resizeMemChar(index, string);
-				string[index++] = c;
-				break;
+			} else {
+				fprintf(stderr, "Parser invalido\n");
+				exit(1);
+			}
+			break;
+		case ' ':
+		case '\n':
+		case '\t':
+			break;
+		default:
+			string = resizeMemChar(index, string);
+			string[index++] = c;
+			break;
 		}
 	}
-	if(vecBalance.numbers[vecBalance.pos] != 0) {
+	if (vecBalance.numbers[vecBalance.pos] != 0) {
 		fprintf(stderr, "Parser invalido\n");
 		exit(1);
 	}
 }
 
-// void checkCommand(char * string, int dim, FILE * file) {
-// 	int i;
-// 	for(i = 0; i < dim; i++) {
-// 		toUpper(string[i]);
-// 	}
-// 	
-// 	if(strcmp(string, "INC") == 0) {
-// 		
-// 	} else if(strcmp(string, "DEC") == 0) {
-// 	  
-// 	} else if(strcmp(string, "MR") == 0) {
-// 	  
-// 	} else if(strcmp(string, "ML") == 0) {
-// 	  
-// 	} else if(strcmp(string, "CZ") == 0) {
-// 	  
-// 	} else if(strcmp(string, "IF") == 0) {
-// 	  
-// 	} else if(strcmp(string, "ENDIF") == 0) {
-// 	  
-// 	} else if(strcmp(string, "WHILE") == 0) {
-// 	  
-// 	} else if(strcmp(string, "ENDWHILE") == 0) {
-// 	  
-// 	} else {
-// 		fprintf(stderr, "Parser invalido\n");
-// 		exit(1);
-// 	}
-// }
-
 char *
 resizeMemChar(int index, char * vec) {
 	char * aux;
-	if((index % BLOQUE) == 0) {
-		aux = realloc(vec,(index + BLOQUE) * sizeof(char));
-		if(aux == NULL) {
-			printf("Hubo un problema al reservar memoria. Intente nuevamente\n");
+	if ((index % BLOQUE) == 0) {
+		aux = realloc(vec, (index + BLOQUE) * sizeof(char));
+		if (aux == NULL) {
+			printf(
+					"Hubo un problema al reservar memoria. Intente nuevamente\n");
 			exit(1);
-			} else {
-				vec = aux;
-			}
+		} else {
+			vec = aux;
+		}
 	}
 	return vec;
 }
@@ -214,25 +174,43 @@ resizeMemChar(int index, char * vec) {
 int *
 resizeMemInt(int index, int * vec) {
 	int * aux;
-	if((index % BLOQUE) == 0) {
-		aux = realloc(vec,(index + BLOQUE) * sizeof(int));
-		if(aux == NULL) {
-			printf("Hubo un problema al reservar memoria. Intente nuevamente\n");
+	if ((index % BLOQUE) == 0) {
+		aux = realloc(vec, (index + BLOQUE) * sizeof(int));
+		if (aux == NULL) {
+			printf(
+					"Hubo un problema al reservar memoria. Intente nuevamente\n");
 			exit(1);
-			} else {
-				vec = aux;
-			}
+		} else {
+			vec = aux;
+		}
 	}
 	return vec;
 }
 
-void
-hasNumbers(char * vec, int dim) {
+void hasNumbers(char * vec, int dim) {
 	int i;
-	for(i = 0; i < dim; i++) {
-		if(!isdigit(vec[i])) {
+	for (i = 0; i < dim; i++) {
+		if (!isdigit(vec[i])) {
 			fprintf(stderr, "Parser invalido\n");
 			exit(1);
 		}
 	}
+}
+
+int toInt(char*string, int index) {
+
+	int N = 0;
+	int mult = 1;
+	int i;
+
+	for (i = index - 1; i >= 0; i--) {
+		if (!(string[i] >= '0') || !(string[i] <= '9')) {
+			fprintf(stderr, "Parser invalido\n");
+			exit(1);
+		}
+		N += ((string[i] - '0') * mult);
+		mult *= 10;
+	}
+
+	return N;
 }
