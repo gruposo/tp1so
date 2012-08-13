@@ -75,11 +75,14 @@ nodeADT parse(FILE * file, int state) {
 
 			if(isFirst){
 				first = newNode(com);
-
+				current = first;
 				isFirst = FALSE;
+			}else{
+				nodeADT next = newNode(com);
+				addNext(current, next);
+				current = next;
 			}
 
-			current = newNode(com);
 			index = 0;
 			break;
 		case ')':
@@ -96,7 +99,10 @@ nodeADT parse(FILE * file, int state) {
 				if (com != cz) {
 					fprintf(stderr, "Parser invalido\n");
 					exit(1);
+				}else{
+					addParam(current, -1);
 				}
+				
 			} else {
 				if (com == endif) {
 					if (vecIf.numbers[(vecIf.pos) - 1] != toInt(string, index)) {
@@ -115,6 +121,8 @@ nodeADT parse(FILE * file, int state) {
 					exit(1);
 				} else {
 					hasNumbers(string,index);
+					
+					addParam(current, toInt(string, index));
 				}
 				vecBalance.numbers[vecBalance.pos] = 0;
 				index = 0;
@@ -122,18 +130,22 @@ nodeADT parse(FILE * file, int state) {
 			break;
 		case ',':
 			if (index != 0 && (com == ifa || com == whilea)) {
+				
+				hasNumbers(string, index);
+				addParam(current, toInt(string, index));
+				
 				if (com == ifa) {
 					vecIf.numbers = resizeMemInt(vecIf.pos, vecIf.numbers);
-					hasNumbers(string, index);
 					vecIf.numbers[(vecIf.pos)++] = toInt(string, index);
-					addCondList(current,parse(file, TRUE));
+					
 				} else {
 					vecWhile.numbers = resizeMemInt(vecWhile.pos,
 							vecWhile.numbers);
-					hasNumbers(string, index);
 					vecWhile.numbers[(vecWhile.pos)++] = toInt(string, index);
-					addCondList(current, parse(file, TRUE));
 				}
+				
+				addCondList(current,parse(file, TRUE));
+				
 			} else {
 				fprintf(stderr, "Parser invalido\n");
 				exit(1);
@@ -153,6 +165,8 @@ nodeADT parse(FILE * file, int state) {
 		fprintf(stderr, "Parser invalido\n");
 		exit(1);
 	}
+	
+	return first;
 }
 
 char *
