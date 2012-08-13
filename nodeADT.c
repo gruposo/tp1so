@@ -1,4 +1,7 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <string.h>
 #include "nodeADT.h"
 
 struct nodeCDT{
@@ -36,4 +39,16 @@ void addCondList(nodeADT node, nodeADT condList){
 void addNextList(nodeADT node, nodeADT nextList){
 
 	node->next = nextList;
+}
+
+void print(nodeADT node) {
+	printf("ins: %d   param: %d\n",node->instr,node->param);
+}
+
+nodeADT getNext(nodeADT node) {
+	return node->next;
+}
+
+nodeADT getCond(nodeADT node) {
+	return node->cond;
 }

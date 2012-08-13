@@ -1,3 +1,6 @@
+#ifndef PARSER_H_
+#define PARSER_H_
+
 #define BLOQUE 10
 #define FALSE 0
 #define TRUE !FALSE
@@ -13,4 +16,6 @@ char * resizeMemChar(int index, char * vec);
 int * resizeMemInt(int index, int * vec);
 void hasNumbers(char * vec, int dim);
 int toInt(char*string, int index);
-// void checkCommand(char * string)
+void printList(nodeADT node) ;
+
+#endif

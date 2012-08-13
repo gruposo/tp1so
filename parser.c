@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
-#include "parser.h"
 #include "nodeADT.h"
+#include "parser.h"
 
 int main(void) {
 	FILE * file;
@@ -17,6 +17,7 @@ int main(void) {
 
 	if (!feof(file)) {
 		first = parse(file, FALSE);
+		printList(first);
 	}
 
 	fclose(file);
@@ -79,7 +80,7 @@ nodeADT parse(FILE * file, int state) {
 				isFirst = FALSE;
 			}else{
 				nodeADT next = newNode(com);
-				addNext(current, next);
+				addNextList(current, next);
 				current = next;
 			}
 
@@ -166,7 +167,22 @@ nodeADT parse(FILE * file, int state) {
 		exit(1);
 	}
 	
+	
+	
 	return first;
+}
+
+void
+printList(nodeADT node) {
+	print(node);
+	if(getCond(node) != NULL) {
+		printList(getCond(node));
+	}
+	if(getNext(node) != NULL) {
+		printf("-------");
+		printList(getNext(node));
+	}
+	
 }
 
 char *
