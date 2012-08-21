@@ -23,7 +23,7 @@ int main(void) {
 	fclose(file);
 	return 0;
 }
-//distinguir entre recursivas y no recursivas, ver de acuerdo a eso si cortar el algoritmo por error o simplemente volver a la anterior.
+
 nodeADT parse(FILE * file, int state) {
 	nodeADT first;
 	nodeADT current;
