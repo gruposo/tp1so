@@ -4,10 +4,20 @@
 #include <string.h>
 #include "nodeADT.h"
 #include "parser.h"
+#include "Stack.h"
+
+#define MEMSIZE 1000
 
 int main(void) {
 	FILE * file;
 	nodeADT first;
+	Block my_block;
+
+	my_block.boolean = 0;
+
+	my_block.current = 0;
+
+	my_block.memory = calloc(MEMSIZE, sizeof(int));
 
 	file = fopen("/home/facundo/tp1so/archivo.txt", "r");
 	if (file == NULL) {
@@ -21,7 +31,141 @@ int main(void) {
 	}
 
 	fclose(file);
+
+	execute(first, &my_block);
+
 	return 0;
+}
+
+void execute(nodeADT node, Block * my_block) {
+
+	int operation = getOperation(node);
+
+	int N = (getParam(node) >= MEMSIZE) ? (MEMSIZE - 1) : getParam(node);
+
+	switch (operation) {
+
+	case (1):
+
+		(my_block->memory)[my_block->current] += getParam(node);
+
+		if (getNext(node) != null) {
+
+			execute(getNext(node), my_block);
+		}
+
+		//hago el INC
+
+		break;
+	case (2):
+
+		(my_block->memory)[my_block->current] -= getParam(node);
+
+		if (getNext(node) != null) {
+
+			execute(getNext(node), my_block);
+		}
+
+		//hago el DEC
+
+		break;
+	case (3):
+
+		if ((my_block->current) + getParam(node) >= MEMSIZE) {
+
+			my_block->current = MEMSIZE - 1;
+		} else {
+
+			(my_block->current) += getParam(node);
+		}
+
+		if (getNext(node) != null) {
+
+			execute(getNext(node), my_block);
+		}
+
+		//hago el MR
+
+		break;
+	case (4):
+
+		if ((my_block->current) - getParam(node) < 0) {
+
+			my_block->current = 0;
+		} else {
+
+			(my_block->current) -= getParam(node);
+		}
+
+		if (getNext(node) != null) {
+
+			execute(getNext(node), my_block);
+		}
+
+		//hago el ML
+
+		break;
+	case (5):
+
+		if ((my_block->memory)[my_block->current]) {
+
+			my_block->boolean = 1;
+		} else {
+			my_boolean = 0;
+		}
+
+		if (getNext(node) != null) {
+
+			execute(getNext(node), my_block);
+		}
+
+		//hago el CZ
+
+		break;
+	case (6):
+
+		if (my_block->boolean) {
+
+			if (getExe(node) != null) {
+
+				execute(getExe(node), my_block);
+			}
+		}
+
+		if (getNext() != null) {
+
+			nodeADT nodeENDIF = getJump(node);
+
+			execute(getJump(node), my_block);
+
+
+			//tal vez, si deberia salir del ciclo, estaria bueno seguir la recursividad con EL SIGUIENTE DEL ENDIF
+			//ver que onda con el estado logico en el que estaba al entrar al if, para ver como se comportaria en el endif, y lo mismo para while.
+		}
+
+		//hago el IF
+
+		break;
+	case (7):
+
+		//hago el ENDIF
+
+		break;
+	case (8):
+
+		//hago el WHILE
+
+		break;
+	case (9):
+
+		//hago el ENDWHILE
+
+		break;
+
+	default:
+
+		break;
+	}
 }
 
 nodeADT parse(FILE * file, int state) {
@@ -41,6 +185,10 @@ nodeADT parse(FILE * file, int state) {
 	int c, i;
 	Commands com = empty;
 	int isFirst = TRUE;
+
+	Stack stack;
+
+	stack_init(&stack);
 
 	while ((c = fgetc(file)) != EOF) {
 		switch (c) {
@@ -74,13 +222,13 @@ nodeADT parse(FILE * file, int state) {
 				exit(1);
 			}
 
-			if(isFirst){
+			if (isFirst) {
 				first = newNode(com);
 				current = first;
 				isFirst = FALSE;
-			}else{
+			} else {
 				nodeADT next = newNode(com);
-				addNextList(current, next);
+				addNext(current, next);
 				current = next;
 			}
 
@@ -100,29 +248,43 @@ nodeADT parse(FILE * file, int state) {
 				if (com != cz) {
 					fprintf(stderr, "Parser invalido\n");
 					exit(1);
-				}else{
+				} else {
 					addParam(current, -1);
 				}
-				
+
 			} else {
 				if (com == endif) {
-					if (vecIf.numbers[(vecIf.pos) - 1] != toInt(string, index)) {
+					if (vecIf.numbers[(vecIf.pos) - 1]
+							!= toInt(string, index)) {
 						fprintf(stderr, "Parser invalido\n");
 						exit(1);
 					}
 					(vecIf.pos) -= 1;
+
+					nodeADT returnTO = stack_top(&stack); //castear, maybe
+					stack_pop(&stack, 1);
+					addReturn(current, returnTO);
+					addJump(returnTO, current);
+
 				} else if (com == endwhile) {
-					if (vecWhile.numbers[(vecWhile.pos) - 1] != toInt(string, index)) {
+					if (vecWhile.numbers[(vecWhile.pos) - 1]
+							!= toInt(string, index)) {
 						fprintf(stderr, "Parser invalido\n");
 						exit(1);
 					}
 					(vecWhile.pos) -= 1;
+
+					nodeADT returnTO = stack_top(&stack); //castear, maybe
+					stack_pop(&stack, 1);
+					addReturn(current, returnTO);
+					addJump(returnTO, current);
+
 				} else if (com == cz) {
 					fprintf(stderr, "Parser invalido\n");
 					exit(1);
 				} else {
-					hasNumbers(string,index);
-					
+					hasNumbers(string, index);
+
 					addParam(current, toInt(string, index));
 				}
 				vecBalance.numbers[vecBalance.pos] = 0;
@@ -131,22 +293,24 @@ nodeADT parse(FILE * file, int state) {
 			break;
 		case ',':
 			if (index != 0 && (com == ifa || com == whilea)) {
-				
+
 				hasNumbers(string, index);
 				addParam(current, toInt(string, index));
-				
+
 				if (com == ifa) {
 					vecIf.numbers = resizeMemInt(vecIf.pos, vecIf.numbers);
 					vecIf.numbers[(vecIf.pos)++] = toInt(string, index);
-					
+
 				} else {
 					vecWhile.numbers = resizeMemInt(vecWhile.pos,
 							vecWhile.numbers);
 					vecWhile.numbers[(vecWhile.pos)++] = toInt(string, index);
 				}
-				
-				addCondList(current,parse(file, TRUE));
-				
+
+				stack_push(&stack, current);
+
+				addExe(current, parse(file, TRUE));
+
 			} else {
 				fprintf(stderr, "Parser invalido\n");
 				exit(1);
@@ -166,23 +330,20 @@ nodeADT parse(FILE * file, int state) {
 		fprintf(stderr, "Parser invalido\n");
 		exit(1);
 	}
-	
-	
-	
+
 	return first;
 }
 
-void
-printList(nodeADT node) {
+void printList(nodeADT node) {
 	print(node);
-	if(getCond(node) != NULL) {
-		printList(getCond(node));
+	if (getExe(node) != NULL) {
+		printList(getExe(node));
 	}
-	if(getNext(node) != NULL) {
+	if (getNext(node) != NULL) {
 		printf("-------");
 		printList(getNext(node));
 	}
-	
+
 }
 
 char *
@@ -244,5 +405,4 @@ int toInt(char*string, int index) {
 
 	return N;
 }
-
 

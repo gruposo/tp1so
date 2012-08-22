@@ -3,11 +3,24 @@
 
 typedef struct nodeCDT * nodeADT;
 nodeADT newNode(int instr);
-void addCondList(nodeADT node, nodeADT condList);
-void addNextList(nodeADT node, nodeADT nextList);
-void addParam(nodeADT node, int param);
-nodeADT getCond(nodeADT node);
+int getOperation(nodeADT node);
+
+int getParam(nodeADT node);
+
 nodeADT getNext(nodeADT node);
 
+nodeADT getExe(nodeADT node);
+
+void addParam(nodeADT node, int param);
+
+void addReturn(nodeADT node, nodeADT returnTO);
+
+void addExe(nodeADT node, nodeADT exeList);
+
+void addNext(nodeADT node, nodeADT next);
+
+void addJump(nodeADT node, nodeADT jump);
+
+void print(nodeADT node);
 
 #endif /* NODEADT_H_ */
