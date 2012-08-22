@@ -11,6 +11,10 @@ nodeADT getNext(nodeADT node);
 
 nodeADT getExe(nodeADT node);
 
+nodeADT getReturnTO(nodeADT node);
+
+nodeADT getJump(nodeADT node);
+
 void addParam(nodeADT node, int param);
 
 void addReturn(nodeADT node, nodeADT returnTO);

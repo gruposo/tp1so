@@ -1,4 +1,13 @@
-if(20,inc(20))
-inc(21)
-endif(20)
+inc(2)
 
+while(20,
+	mr(12)
+	inc(12)
+	if(70,
+		MR(200)
+	)
+	dec(50)
+	endif(70)
+)
+ML(222)
+endwhile(20)

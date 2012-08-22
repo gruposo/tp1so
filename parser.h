@@ -3,7 +3,7 @@
 
 #define BLOQUE 10
 #define FALSE 0
-#define TRUE !FALSE
+#define TRUE 1
 
 typedef struct {
 	int boolean;
@@ -26,5 +26,6 @@ void hasNumbers(char * vec, int dim);
 int toInt(char*string, int index);
 void printList(nodeADT node);
 void execute(nodeADT node, Block * my_block);
+void printMemory(Block * my_block);
 
 #endif
