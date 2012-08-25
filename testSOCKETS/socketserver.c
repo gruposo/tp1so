@@ -60,11 +60,13 @@ message_t IPC_receive(int fd){
     
     //  the structure to put in process2's address
     struct sockaddr_in client;
-    unsigned
-    int client_len = sizeof(struct sockaddr_in);
+    unsigned int client_len = sizeof(struct sockaddr_in);
+    
+    int length = sizeof(int) + MAX_BUFFER_SIZE * sizeof(char);
+    char * serialized = calloc(1, length);
     
     //  receives the message and stores the address of the client
-    if(recvfrom(fd, &msg, sizeof (message_t), 0, (struct sockaddr *)&client, &client_len) == -1 ){
+    if(recvfrom(fd, serialized, length, 0, (struct sockaddr *)&client, &client_len) == -1 ){
         perror("server could not receive message");
 //        return -1;
     }
@@ -79,8 +81,13 @@ void IPC_send(message_t msg, int fd, int pid){
     struct sockaddr_in client;  // A QUIEN LE MANDO??????????????????????????????????????????????
     int client_len = sizeof(struct sockaddr_in);
     
+    int length = sizeof(int) + MAX_BUFFER_SIZE * sizeof(char);
+    char * serialized = calloc(1, length);
+    
+    serialized = serialize_msg(msg);
+    
     //        sends the message back to where it came from
-    if( sendto(fd, &msg, sizeof (message_t), 0, (struct sockaddr *)&client, client_len)== -1){
+    if( sendto(fd, serialized, length, 0, (struct sockaddr *)&client, client_len)== -1){
         perror("server could not send message");
 //        return -1;
     }

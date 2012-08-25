@@ -2,15 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define MAX_BUFFER_SIZE 5000
-
-typedef struct {
-	int pid;
-	char buffer[MAX_BUFFER_SIZE];
-} message_t;
-
-char * serialize_msg(message_t * msg);
-message_t * deserialize_msg(char * serialized_msg);
+#include "ipc.h"
+#include "serializer.h"
 
 int main(){
     
