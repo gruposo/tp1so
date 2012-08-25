@@ -1,17 +1,15 @@
 #define MEM_SIZE 5000
 #define SERVER 1L
 
-typedef struct {
-	int pid;
-	int size;
-} header;
+#define MAX_BUFFER_SIZE 5000
 
 typedef struct {
 	int pid;
-	char buffer[MEM_SIZE];
+	char buffer[MAX_BUFFER_SIZE];
 	int contenttypesize;
 	int contentsize;
 } message_t;
+
 
 //char file_path[BUFF_SIZE];
 //int memory[MEM_SIZE];
