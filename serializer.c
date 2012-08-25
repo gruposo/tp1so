@@ -34,6 +34,17 @@ char * serialize_msg(message_t * msg){
     
 }
 
+char * serialize_mem(int * mem){
+    
+    int length = sizeof(int) * 1000;
+    char * serialized_mem = malloc(length);
+    
+    memcpy(serialized_mem, mem, length);
+    
+    return serialized_mem;
+    
+}
+
 message_t * deserialize_msg(char * serialized_msg){
     
     message_t * msg = calloc(1, sizeof(message_t));
@@ -44,5 +55,15 @@ message_t * deserialize_msg(char * serialized_msg){
     memcpy(&msg->buffer, serialized_msg+offset, MAX_BUFFER_SIZE);
     
     return msg;
+    
+}
+
+int * deserialize_mem(char * serialized_mem){
+    
+    int * mem = malloc(1000);
+    
+    memcpy(&mem, serialized_mem, sizeof(int) * 1000);
+    
+    return mem;
     
 }
