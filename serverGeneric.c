@@ -5,6 +5,7 @@
 #include <semaphore.h>
 #include <fcntl.h>
 #include "parser.h"
+#include "serializer.h"
 #define PATH_SIZE 32
 #include "ipc.h"
 void programAttention(FILE * file, int pid);
@@ -54,6 +55,7 @@ void programAttention(FILE * file, int pid) {
 	char private_fifo[PATH_SIZE], semaphore_path[PATH_SIZE];
 	message_t message;
 	sem_t * semaphore;
+	char * serialized;
 
 	nodeADT first;
 	Block my_block;
@@ -65,19 +67,26 @@ void programAttention(FILE * file, int pid) {
 
 		(my_block.memory)[i] = 0;
 	}
+	(my_block.memory)[500] = 500;
 
 	if (!feof(file)) {
 		first = parse(file, FALSE);
 	}
 
 	fclose(file);
-
+	printf("ANTES:/n");
+	for(i = 0 ; i < 1000; i++) {
+		printf("%d, ", (my_block.memory)[i]);
+	}
 	execute(first, &my_block);
-
+	printf("DESPUES:/n");
+	for(i = 0 ; i < 1000; i++) {
+			printf("%d, ", (my_block.memory)[i]);
+	}
 	sprintf(private_fifo, "%s%d", "/tmp/fifo", pid);
 	sprintf(semaphore_path, "%s%d", "/semaphore", pid);
 
-	// tengo que serializar el vector de ints en char
+	strcpy(message.buffer, serialize_mem(my_block.memory));
 
 	semaphore = sem_open(semaphore_path, O_CREAT);
 

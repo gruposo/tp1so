@@ -1,6 +1,5 @@
 inc(2)
-
-while(20,
+if(20,
 	mr(12)
 	inc(12)
 	if(70,
@@ -10,4 +9,4 @@ while(20,
 	endif(70)
 )
 ML(222)
-endwhile(20)
+endif(20)

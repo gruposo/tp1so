@@ -2,49 +2,13 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
-#include "nodeADT.h"
+
 #include "parser.h"
-#include "Stack.h"
+
 
 #define MEMSIZE 1000
 
-int main(void) {
-	FILE * file;
-	nodeADT first;
-	Block my_block;
-
-	my_block.boolean = FALSE;
-
-	my_block.current = 0;
-
-	my_block.memory = calloc(MEMSIZE, sizeof(int));
-
-	file = fopen("/home/facundo/tp1so/archivo.txt", "r");
-	if (file == NULL) {
-		printf("File couldn't be opened/n");
-		exit(1);
-	}
-
-	if (!feof(file)) {
-		first = parse(file, FALSE);
-//		printList(first);
-	}
-
-	fclose(file);
-
-	execute(first, &my_block);
-
-	return 0;
-}
-
 void execute(nodeADT node, Block * my_block) {
-
-	printMemory(my_block);
-
-	if (node == NULL) {
-
-		printf("hoola\n");
-	}
 
 	int operation = getOperation(node);
 
@@ -58,18 +22,18 @@ void execute(nodeADT node, Block * my_block) {
 
 		printf("Operacion = INC / Parametro = %d\n", param);
 
-		(my_block->memory)[my_block->current] += getParam(node);
+		((my_block->memory)[my_block->current]) += getParam(node);
 		if (getNext(node) != NULL) {
 			execute(getNext(node), my_block);
 		}
-		//hago el INC
+		//hago el INCthread vs for
 
 		break;
 	case (2):
 
 		printf("Operacion = DEC / Parametro = %d\n", param);
 
-		(my_block->memory)[my_block->current] -= getParam(node);
+		((my_block->memory)[my_block->current]) -= getParam(node);
 		if (getNext(node) != NULL) {
 			execute(getNext(node), my_block);
 		}
@@ -86,7 +50,6 @@ void execute(nodeADT node, Block * my_block) {
 			(my_block->current) += getParam(node);
 		}
 		if (getNext(node) != NULL) {
-			printf("Siguiente: %d\n", getOperation(getNext(node)));
 			execute(getNext(node), my_block);
 		}
 		//hago el MR
@@ -111,7 +74,7 @@ void execute(nodeADT node, Block * my_block) {
 
 		printf("Operacion = CZ / Parametro = %d\n", param);
 
-		if ((my_block->memory)[my_block->current] == 0) {
+		if (((my_block->memory)[my_block->current]) == 0) {
 			my_block->boolean = TRUE;
 		} else {
 			my_block->boolean = FALSE;
@@ -358,38 +321,38 @@ nodeADT parse(FILE * file, int state) {
 	return first;
 }
 
-void printList(nodeADT node) {
-
-	print(node);
-
-	if (getExe(node) != NULL) {
-
-		printf("\t Expr - ABRE\n");
-
-		printList(getExe(node));
-
-		printf("\t Expr - CIERRA\n");
-	}
+//void printList(nodeADT node) {
 //
-//	if ((nodeADT)getReturnTO(node) != NULL) {
+//	print(node);
 //
-//		printf("\t RETORNA A: ");
+//	if (getExe(node) != NULL) {
 //
-//		print((nodeADT)getReturnTO(node));
+//		printf("\t Expr - ABRE\n");
+//
+//		printList(getExe(node));
+//
+//		printf("\t Expr - CIERRA\n");
 //	}
+////
+////	if ((nodeADT)getReturnTO(node) != NULL) {
+////
+////		printf("\t RETORNA A: ");
+////
+////		print((nodeADT)getReturnTO(node));
+////	}
+////
+////	if ((nodeADT)getJump(node) != NULL) {
+////
+////		printf("\t SALTA A: ");
+////
+////		print((nodeADT)getJump(node));
+////	}
 //
-//	if ((nodeADT)getJump(node) != NULL) {
-//
-//		printf("\t SALTA A: ");
-//
-//		print((nodeADT)getJump(node));
+//	if (getNext(node) != NULL) {
+//		printf("->NEXT->");
+//		printList(getNext(node));
 //	}
-
-	if (getNext(node) != NULL) {
-		printf("->NEXT->");
-		printList(getNext(node));
-	}
-}
+//}
 
 char *
 resizeMemChar(int index, char * vec) {
@@ -451,15 +414,15 @@ int toInt(char*string, int index) {
 	return N;
 }
 
-void printMemory(Block * my_block) {
-
-	int i;
-	for (i = 0; i < 1000; i++) {
-
-		if ((my_block->memory)[i] != 0) {
-
-			printf("Memoria nro %d: %d\n", i, (my_block->memory)[i]);
-		}
-	}
-}
+//void printMemory(Block * my_block) {
+//
+//	int i;
+//	for (i = 0; i < 1000; i++) {
+//
+//		if ((my_block->memory)[i] != 0) {
+//
+//			printf("Memoria nro %d: %d\n", i, (my_block->memory)[i]);
+//		}
+//	}
+//}
 

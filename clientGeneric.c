@@ -12,6 +12,7 @@ main(int argc, char * argv[]) {
 	int fd,fd2, pid, i;
 	char private_fifo[PATH_SIZE], semaphore_path[PATH_SIZE];
 	sem_t * semaphore;
+	int * ans = malloc(1000 * sizeof(int));
 	
 	for(i=0; i<PATH_SIZE; i++){
 		private_fifo[i] = '\0';
@@ -40,9 +41,13 @@ main(int argc, char * argv[]) {
 	//recibo la respuesta del servidor
 	fd2 = IPC_connect(SERVER, private_fifo);
 	message2 = IPC_receive(fd2, pid);
-	printf("%s\n",message2.buffer);
+	ans = (int *)deserialize_mem(message2.buffer);
+
+//	for(i = 0; i < 1000; i++) {
+//		printf("%d, ", ans[i]);
+//	}
+//	printf("\n");
 	IPC_close(fd2,private_fifo, pid);
-	
 	
 	sem_close(semaphore);
 	sem_unlink(semaphore_path);

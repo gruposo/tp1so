@@ -1,14 +1,18 @@
 #ifndef PARSER_H_
 #define PARSER_H_
 
+#include "nodeADT.h"
+#include "Stack.h"
+
 #define BLOQUE 10
 #define FALSE 0
 #define TRUE 1
 
 typedef struct {
+	int param;
 	int boolean;
 	int current;
-	int * memory;
+	int memory[1000];
 } Block;
 
 typedef struct {

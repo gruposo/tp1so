@@ -34,7 +34,7 @@ IPC_send(message_t msg, int fd, int pid) {
 }
 
 message_t
-IPC_receive(int fd) {
+IPC_receive(int fd, int pid) {
 	message_t message;
 	
 	if (read(fd, &message,sizeof(message)) < 0) {

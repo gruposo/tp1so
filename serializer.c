@@ -5,20 +5,38 @@
 #include "ipc.h"
 #include "serializer.h"
 
-int main(){
-    
-    message_t test = {50, "hola"};
-    
-    int length = sizeof(int) + MAX_BUFFER_SIZE * sizeof(char);
-    char * serial = calloc(1, length);
-    
-    serial = serialize_msg(&test);
-    
-    message_t * deserial = deserialize_msg(serial);
-    printf("%s\n",deserial->buffer);
-    
-    return 1;
-}
+//int main(){
+//
+//    message_t test = {50, "hola"};
+//
+//    int length = sizeof(int) + MAX_BUFFER_SIZE * sizeof(char);
+//    char * serial = calloc(1, length);
+//
+//    serial = serialize_msg(&test);
+//
+//    message_t * deserial = deserialize_msg(serial);
+//    printf("%s\n",deserial->buffer);
+//
+//    return 1;
+//}
+
+//int main(){
+//	int i;
+//	int * test = malloc(10*sizeof(int));
+//	for(i=0;i<10;i++){
+//			test[i]=i;
+//		}
+//
+//
+//	int * t2 = malloc(10*sizeof(int));
+//	char * str = malloc(10*sizeof(int));
+//	str = (char *)serialize_mem(test);
+//
+//	t2 = (int *)deserialize_mem(str);
+//	for(i=0;i<10;i++){
+//		printf("%d\n",t2[i]);
+//	}
+//}
 
 char * serialize_msg(message_t * msg){
     
@@ -36,10 +54,10 @@ char * serialize_msg(message_t * msg){
 
 char * serialize_mem(int * mem){
     
-    int length = sizeof(int) * 1000;
-    char * serialized_mem = malloc(length);
-    
-    memcpy(serialized_mem, mem, length);
+    int length = sizeof(int) * 10;
+    char * serialized_mem = calloc(length,sizeof(char));
+
+    memcpy(serialized_mem, mem, length * sizeof(char));
     
     return serialized_mem;
     
@@ -60,9 +78,10 @@ message_t * deserialize_msg(char * serialized_msg){
 
 int * deserialize_mem(char * serialized_mem){
     
-    int * mem = malloc(1000);
+	int length = sizeof(int) * 10;
+    int * mem = calloc(length, sizeof(char));
     
-    memcpy(&mem, serialized_mem, sizeof(int) * 1000);
+    memcpy(mem, serialized_mem, length);
     
     return mem;
     
