@@ -5,6 +5,8 @@
 #include "ipc.h"
 #include "serializer.h"
 
+
+#define SIZE_MEM 1000
 //int main(){
 //
 //    message_t test = {50, "hola"};
@@ -54,13 +56,12 @@ char * serialize_msg(message_t * msg){
 
 char * serialize_mem(int * mem){
     
-    int length = sizeof(int) * 10;
+    int length = sizeof(int) * SIZE_MEM;
     char * serialized_mem = calloc(length,sizeof(char));
 
     memcpy(serialized_mem, mem, length * sizeof(char));
     
     return serialized_mem;
-    
 }
 
 message_t * deserialize_msg(char * serialized_msg){
@@ -73,16 +74,14 @@ message_t * deserialize_msg(char * serialized_msg){
     memcpy(&msg->buffer, serialized_msg+offset, MAX_BUFFER_SIZE);
     
     return msg;
-    
 }
 
 int * deserialize_mem(char * serialized_mem){
     
-	int length = sizeof(int) * 10;
+	int length = sizeof(int) * SIZE_MEM;
     int * mem = calloc(length, sizeof(char));
     
     memcpy(mem, serialized_mem, length);
     
     return mem;
-    
 }

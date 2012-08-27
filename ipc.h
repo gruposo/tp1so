@@ -1,10 +1,8 @@
 #ifndef IPC_H_
 #define IPC_H_
 
-#define MEM_SIZE 5000
 #define SERVER 1L
-
-#define MAX_BUFFER_SIZE 5000
+#define MAX_BUFFER_SIZE 4000
 
 typedef struct {
 	int pid;

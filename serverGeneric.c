@@ -37,7 +37,7 @@ int main(void) {
 				break;
 			case 0:
 				programAttention(file, message.pid);
-				break;
+				exit(1);
 			default:
 				break;
 			}
@@ -67,22 +67,27 @@ void programAttention(FILE * file, int pid) {
 
 		(my_block.memory)[i] = 0;
 	}
-	(my_block.memory)[500] = 500;
+	//(my_block->memory)[500] = 500;
 
 	if (!feof(file)) {
 		first = parse(file, FALSE);
 	}
 
 	fclose(file);
-	printf("ANTES:/n");
-	for(i = 0 ; i < 1000; i++) {
+//	printf("ANTES:/n");
+//	for (i = 0; i < 1000; i++) {
+//		printf("%d, ", (my_block->memory)[i]);
+//	}
+
+	execute(first, &my_block);
+
+//	printf("DESPUES:/n");
+//
+	for (i = 0; i < 1000; i++) {
+//		printf("%d - ", i);
 		printf("%d, ", (my_block.memory)[i]);
 	}
-	execute(first, &my_block);
-	printf("DESPUES:/n");
-	for(i = 0 ; i < 1000; i++) {
-			printf("%d, ", (my_block.memory)[i]);
-	}
+
 	sprintf(private_fifo, "%s%d", "/tmp/fifo", pid);
 	sprintf(semaphore_path, "%s%d", "/semaphore", pid);
 

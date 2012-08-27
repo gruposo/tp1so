@@ -27,20 +27,21 @@ IPC_connect(int mqid, char * pathname) {
 void
 IPC_send(message_t msg, int fd, int pid) {
 	int nwrite;
-	
+
 	if ((nwrite = write(fd, &msg, sizeof(msg))) == -1) {
 		printf("%s","Message could not be send\n");
-	}  
+	}
+	printf("SE envio por el pipe: %d\n", nwrite);
 }
 
 message_t
 IPC_receive(int fd, int pid) {
 	message_t message;
-	
+
 	if (read(fd, &message,sizeof(message)) < 0) {
 		printf("%s","Couldn't read from fifo\n");
 	}
-	
+
 	return message;
 }
 
