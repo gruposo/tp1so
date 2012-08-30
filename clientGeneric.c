@@ -43,7 +43,7 @@ main(int argc, char * argv[]) {
 	message2 = IPC_receive(fd2, pid);
 	ans = (int *)deserialize_mem(message2.buffer);
 
-	printf("RECIBO DEL PIPE: /n");
+	printf("RECIBO DEL PIPE: \n");
 	for(i = 0; i < 1000; i++) {
 		printf("%d, ", ans[i]);
 	}

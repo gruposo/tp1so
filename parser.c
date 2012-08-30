@@ -33,6 +33,7 @@ void execute(nodeADT node, Block * my_block) {
 
 		printf("Operacion = DEC / Parametro = %d\n", param);
 
+		
 		((my_block->memory)[my_block->current]) -= getParam(node);
 		if (getNext(node) != NULL) {
 			execute(getNext(node), my_block);
@@ -44,7 +45,7 @@ void execute(nodeADT node, Block * my_block) {
 
 		printf("Operacion = MR / Parametro = %d\n", param);
 
-		if ((my_block->current) + getParam(node) >= MEMSIZE) {
+		if (((my_block->current) + getParam(node)) >= MEMSIZE) {
 			my_block->current = MEMSIZE - 1;
 		} else {
 			(my_block->current) += getParam(node);
@@ -59,7 +60,7 @@ void execute(nodeADT node, Block * my_block) {
 
 		printf("Operacion = ML / Parametro = %d\n", param);
 
-		if ((my_block->current) - getParam(node) < 0) {
+		if (((my_block->current) - getParam(node)) < 0) {
 			my_block->current = 0;
 		} else {
 			(my_block->current) -= getParam(node);
@@ -228,6 +229,8 @@ nodeADT parse(FILE * file, int state) {
 					fprintf(stderr, "Parser invalido2\n");
 					exit(1);
 				}
+			} else {
+				vecBalance.numbers[vecBalance.pos] = 0;
 			}
 			if (index == 0) {
 				if (com != cz) {

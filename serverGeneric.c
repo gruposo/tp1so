@@ -42,8 +42,7 @@ int main(void) {
 				break;
 			}
 		} else {
-			printf("The file of the client %d couldn't be opened\n",
-					message.pid);
+			printf("The file of the client %d couldn't be opened\n", message.pid);
 		}
 	}
 
@@ -55,49 +54,34 @@ void programAttention(FILE * file, int pid) {
 	char private_fifo[PATH_SIZE], semaphore_path[PATH_SIZE];
 	message_t message;
 	sem_t * semaphore;
-	char * serialized;
-
+	
 	nodeADT first;
 	Block my_block;
-
+	
 	my_block.boolean = FALSE;
 	my_block.current = 0;
-
+	
 	for (i = 0; i < 1000; i++) {
-
 		(my_block.memory)[i] = 0;
 	}
-	//(my_block->memory)[500] = 500;
-
+	
 	if (!feof(file)) {
 		first = parse(file, FALSE);
 	}
-
+	
 	fclose(file);
-//	printf("ANTES:/n");
-//	for (i = 0; i < 1000; i++) {
-//		printf("%d, ", (my_block->memory)[i]);
-//	}
-
 	execute(first, &my_block);
-
-//	printf("DESPUES:/n");
-//
-	for (i = 0; i < 1000; i++) {
-//		printf("%d - ", i);
-		printf("%d, ", (my_block.memory)[i]);
-	}
-
+	
 	sprintf(private_fifo, "%s%d", "/tmp/fifo", pid);
 	sprintf(semaphore_path, "%s%d", "/semaphore", pid);
-
-	strcpy(message.buffer, serialize_mem(my_block.memory));
-
+	
+	memcpy(message.buffer, serialize_mem(my_block.memory), 4000);
+	
 	semaphore = sem_open(semaphore_path, O_CREAT);
-
+	
 	mqid = IPC_init(SERVER, private_fifo);
 	fd = IPC_connect(SERVER, private_fifo);
-
+	
 	sem_post(semaphore);
 	IPC_send(message, fd, pid);
 }
