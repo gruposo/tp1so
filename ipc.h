@@ -3,6 +3,7 @@
 
 #define SERVER 1L
 #define MAX_BUFFER_SIZE 4000
+#define VEC_SIZE 1000
 
 typedef struct {
 	int pid;
@@ -11,9 +12,6 @@ typedef struct {
 	int contentsize;
 } message_t;
 
-
-//char file_path[BUFF_SIZE];
-//int memory[MEM_SIZE];
 
 int IPC_init(int pid, char * ipc_path);
 //devuelve fd

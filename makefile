@@ -1,5 +1,5 @@
 ifndef IPC
-	IPC = fifo
+	IPC = mqueue
 endif
 
 CFLAGS= -lpthread -g

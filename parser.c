@@ -5,7 +5,6 @@
 
 #include "parser.h"
 
-
 #define MEMSIZE 1000
 
 void execute(nodeADT node, Block * my_block) {
@@ -14,28 +13,19 @@ void execute(nodeADT node, Block * my_block) {
 
 	int param = getParam(node);
 
-	int N = (getParam(node) >= MEMSIZE) ? (MEMSIZE - 1) : getParam(node);
+	int N = (param >= MEMSIZE) ? (MEMSIZE - 1) : param;
 
 	switch (operation) {
 
 	case (1):
-
-		printf("Operacion = INC / Parametro = %d\n", param);
-
-		((my_block->memory)[my_block->current]) += getParam(node);
-		if (getNext(node) != NULL) {
-			execute(getNext(node), my_block);
-		}
-		//hago el INCthread vs for
 
 		break;
 	case (2):
 
 		printf("Operacion = DEC / Parametro = %d\n", param);
 
-		
 		((my_block->memory)[my_block->current]) -= getParam(node);
-		if (getNext(node) != NULL) {
+		if (getNext(node) != NULL ) {
 			execute(getNext(node), my_block);
 		}
 		//hago el DEC
@@ -50,7 +40,7 @@ void execute(nodeADT node, Block * my_block) {
 		} else {
 			(my_block->current) += getParam(node);
 		}
-		if (getNext(node) != NULL) {
+		if (getNext(node) != NULL ) {
 			execute(getNext(node), my_block);
 		}
 		//hago el MR
@@ -65,7 +55,7 @@ void execute(nodeADT node, Block * my_block) {
 		} else {
 			(my_block->current) -= getParam(node);
 		}
-		if (getNext(node) != NULL) {
+		if (getNext(node) != NULL ) {
 			execute(getNext(node), my_block);
 		}
 		//hago el ML
@@ -80,7 +70,7 @@ void execute(nodeADT node, Block * my_block) {
 		} else {
 			my_block->boolean = FALSE;
 		}
-		if (getNext(node) != NULL) {
+		if (getNext(node) != NULL ) {
 			execute(getNext(node), my_block);
 		}
 		//hago el CZ
@@ -98,7 +88,7 @@ void execute(nodeADT node, Block * my_block) {
 		} else {
 			nodeADT nodeENDIF = (nodeADT) getJump(node);
 
-			if (getNext(nodeENDIF) != NULL) {
+			if (getNext(nodeENDIF) != NULL ) {
 
 				execute(getNext(nodeENDIF), my_block);
 			}
@@ -110,7 +100,7 @@ void execute(nodeADT node, Block * my_block) {
 
 		printf("Operacion = ENDIF / Parametro = %d\n", param);
 
-		if (getNext(node) != NULL) {
+		if (getNext(node) != NULL ) {
 
 			execute(getNext(node), my_block);
 		}
@@ -128,7 +118,7 @@ void execute(nodeADT node, Block * my_block) {
 
 			nodeADT nodeENDWHILE = (nodeADT) getJump(node);
 
-			if (getNext(nodeENDWHILE) != NULL) {
+			if (getNext(nodeENDWHILE) != NULL ) {
 
 				execute(getNext(nodeENDWHILE), my_block);
 			}
@@ -152,6 +142,17 @@ void execute(nodeADT node, Block * my_block) {
 	}
 
 	return;
+}
+
+void inc(nodeADT node, Block * my_block) {
+
+	nodeADT next = getNext(node);
+
+	((my_block->memory)[my_block->current]) += getParam(node);
+
+	if (next != NULL ) {
+		execute(next, my_block);
+	}
 }
 
 nodeADT parse(FILE * file, int state) {
@@ -249,7 +250,7 @@ nodeADT parse(FILE * file, int state) {
 					}
 					(vecIf.pos) -= 1;
 
-					nodeADT returnTO = (nodeADT) stack_top(&stack); //castear, maybe
+					nodeADT returnTO = (nodeADT) stack_top(&stack);
 					stack_pop(&stack, 0);
 					addReturn(current, returnTO); //le digo al ENDIF cual es su IF correspondiente
 					addJump(returnTO, current); //le digo al IF cual es su ENDIF correspondiente
@@ -362,7 +363,7 @@ resizeMemChar(int index, char * vec) {
 	char * aux;
 	if ((index % BLOQUE) == 0) {
 		aux = realloc(vec, (index + BLOQUE) * sizeof(char));
-		if (aux == NULL) {
+		if (aux == NULL ) {
 			printf(
 					"Hubo un problema al reservar memoria. Intente nuevamente\n");
 			exit(1);
@@ -378,7 +379,7 @@ resizeMemInt(int index, int * vec) {
 	int * aux;
 	if ((index % BLOQUE) == 0) {
 		aux = realloc(vec, (index + BLOQUE) * sizeof(int));
-		if (aux == NULL) {
+		if (aux == NULL ) {
 			printf(
 					"Hubo un problema al reservar memoria. Intente nuevamente\n");
 			exit(1);

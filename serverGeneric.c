@@ -17,7 +17,7 @@ int main(void) {
 	message_t message;
 	FILE * file;
 	static struct sigaction act;
-
+	
 	mqid = IPC_init(SERVER, "/tmp/fifo");
 	fd = IPC_connect(SERVER, "/tmp/fifo");
 	public_fd = fd;
