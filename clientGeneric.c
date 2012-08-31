@@ -9,8 +9,7 @@
 int
 main(int argc, char * argv[]) {
 	message_t message, message2;
-	int fd,fd2,i;
-	pid_t pid;
+	int fd,fd2,i, pid;
 	char private_fifo[PATH_SIZE], semaphore_path[PATH_SIZE], fileName[PATH_SIZE];
 	sem_t * semaphore;
 	int * ans = malloc(VEC_SIZE * sizeof(int));
@@ -55,7 +54,7 @@ main(int argc, char * argv[]) {
 }
 
 void
-printResult(pid_t pid, char * path, int * ans) {
+printResult(int pid, char * path, int * ans) {
 	FILE * file;
 	char fileName[PATH_SIZE];
 	int i;

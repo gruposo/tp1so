@@ -7,6 +7,30 @@
 
 #define MEMSIZE 1000
 
+//int main(int argc, char ** argv) {
+//
+//	FILE * file;
+//	int i;
+//	nodeADT first;
+//	Block my_block;
+//
+//	my_block.boolean = TRUE;
+//	my_block.current = 0;
+//
+//	for (i = 0; i < 1000; i++) {
+//		(my_block.memory)[i] = 0;
+//	}
+//
+//	file = fopen(argv[1], "r");
+//
+//	if (!feof(file)) {
+//		first = parse(file, FALSE);
+//	}
+//
+//	fclose(file);
+//	execute(first, &my_block);
+//}
+
 void execute(nodeADT node, Block * my_block) {
 
 	int operation = getOperation(node);
@@ -15,136 +39,16 @@ void execute(nodeADT node, Block * my_block) {
 
 	int N = (param >= MEMSIZE) ? (MEMSIZE - 1) : param;
 
-	switch (operation) {
+	void (*vecFun[])(nodeADT,
+			Block *)= {_inc, _dec, _mr, _ml, _cz, _if, _endif, _while, _endwhile
+			};
 
-	case (1):
-
-		break;
-	case (2):
-
-		printf("Operacion = DEC / Parametro = %d\n", param);
-
-		((my_block->memory)[my_block->current]) -= getParam(node);
-		if (getNext(node) != NULL ) {
-			execute(getNext(node), my_block);
-		}
-		//hago el DEC
-
-		break;
-	case (3):
-
-		printf("Operacion = MR / Parametro = %d\n", param);
-
-		if (((my_block->current) + getParam(node)) >= MEMSIZE) {
-			my_block->current = MEMSIZE - 1;
-		} else {
-			(my_block->current) += getParam(node);
-		}
-		if (getNext(node) != NULL ) {
-			execute(getNext(node), my_block);
-		}
-		//hago el MR
-
-		break;
-	case (4):
-
-		printf("Operacion = ML / Parametro = %d\n", param);
-
-		if (((my_block->current) - getParam(node)) < 0) {
-			my_block->current = 0;
-		} else {
-			(my_block->current) -= getParam(node);
-		}
-		if (getNext(node) != NULL ) {
-			execute(getNext(node), my_block);
-		}
-		//hago el ML
-
-		break;
-	case (5):
-
-		printf("Operacion = CZ / Parametro = %d\n", param);
-
-		if (((my_block->memory)[my_block->current]) == 0) {
-			my_block->boolean = TRUE;
-		} else {
-			my_block->boolean = FALSE;
-		}
-		if (getNext(node) != NULL ) {
-			execute(getNext(node), my_block);
-		}
-		//hago el CZ
-
-		break;
-	case (6):
-
-		printf("Operacion = IF / Parametro = %d\n", param);
-
-		execute(getExe(node), my_block); //SIEMPRE!!
-
-		if ((my_block->boolean) == TRUE) {
-
-			execute(getNext(node), my_block);
-		} else {
-			nodeADT nodeENDIF = (nodeADT) getJump(node);
-
-			if (getNext(nodeENDIF) != NULL ) {
-
-				execute(getNext(nodeENDIF), my_block);
-			}
-		}
-		//hago el IF
-
-		break;
-	case (7):
-
-		printf("Operacion = ENDIF / Parametro = %d\n", param);
-
-		if (getNext(node) != NULL ) {
-
-			execute(getNext(node), my_block);
-		}
-		//hago el ENDIF
-
-		break;
-	case (8):
-
-		printf("Operacion = WHILE / Parametro = %d\n", param);
-
-		execute(getExe(node), my_block);
-		if ((my_block->boolean) == TRUE) {
-			execute(getNext(node), my_block);
-		} else {
-
-			nodeADT nodeENDWHILE = (nodeADT) getJump(node);
-
-			if (getNext(nodeENDWHILE) != NULL ) {
-
-				execute(getNext(nodeENDWHILE), my_block);
-			}
-		}
-		//hago el WHILE
-
-		break;
-	case (9):
-
-		printf("Operacion = ENDWHILE / Parametro = %d\n", param);
-
-		execute((nodeADT) getReturnTO(node), my_block);
-		//hago el ENDWHILE
-
-		break;
-
-	default:
-
-		return;
-		break;
-	}
-
-	return;
+	(*vecFun[operation - 1])(node, my_block);
 }
 
-void inc(nodeADT node, Block * my_block) {
+void _inc(nodeADT node, Block * my_block) {
+
+//	printf("INC -> N = %d\n", getParam(node));
 
 	nodeADT next = getNext(node);
 
@@ -153,6 +57,126 @@ void inc(nodeADT node, Block * my_block) {
 	if (next != NULL ) {
 		execute(next, my_block);
 	}
+}
+
+void _dec(nodeADT node, Block * my_block) {
+
+//	printf("DEC -> N = %d\n", getParam(node));
+
+	nodeADT next = getNext(node);
+
+	((my_block->memory)[my_block->current]) -= getParam(node);
+
+	if (next != NULL ) {
+		execute(next, my_block);
+	}
+}
+
+void _mr(nodeADT node, Block * my_block) {
+
+//	printf("MR -> N = %d\n", getParam(node));
+
+	nodeADT next = getNext(node);
+
+	int param = getParam(node);
+
+	if (((my_block->current) + param) >= MEMSIZE) {
+		my_block->current = MEMSIZE - 1;
+	} else {
+		(my_block->current) += param;
+	}
+	if (next != NULL ) {
+		execute(next, my_block);
+	}
+}
+
+void _ml(nodeADT node, Block * my_block) {
+
+//	printf("ML -> N = %d\n", getParam(node));
+
+	nodeADT next = getNext(node);
+
+	int param = getParam(node);
+
+	if (((my_block->current) - param) < 0) {
+		my_block->current = 0;
+	} else {
+		(my_block->current) -= param;
+	}
+	if (next != NULL ) {
+		execute(next, my_block);
+	}
+}
+
+void _cz(nodeADT node, Block * my_block) {
+
+//	printf("CZ -> N = %d\n", getParam(node));
+
+	nodeADT next = getNext(node);
+
+	my_block->boolean = ((my_block->memory)[my_block->current]) ? TRUE : FALSE;
+
+	if (next != NULL ) {
+		execute(next, my_block);
+	}
+}
+
+void _if(nodeADT node, Block * my_block) {
+
+//	printf("IF -> N = %d\n", getParam(node));
+
+	execute(getExe(node), my_block);
+
+	if ((my_block->boolean) == TRUE) {
+
+		execute(getNext(node), my_block);
+	} else {
+		nodeADT nodeENDIF = (nodeADT) getJump(node);
+
+		if (getNext(nodeENDIF) != NULL ) {
+
+			execute(getNext(nodeENDIF), my_block);
+		}
+	}
+}
+
+void _endif(nodeADT node, Block * my_block) {
+
+//	printf("ENDIF -> N = %d\n", getParam(node));
+
+	nodeADT next = getNext(node);
+
+	if (next != NULL ) {
+
+		execute(next, my_block);
+	}
+}
+
+void _while(nodeADT node, Block * my_block) {
+
+//	printf("WHILE -> N = %d\n", getParam(node));
+
+	execute(getExe(node), my_block);
+
+	if ((my_block->boolean) == TRUE) {
+
+		execute(getNext(node), my_block);
+	} else {
+
+		nodeADT nodeENDWHILE = (nodeADT) getJump(node);
+
+		if (getNext(nodeENDWHILE) != NULL ) {
+
+			execute(getNext(nodeENDWHILE), my_block);
+		}
+	}
+}
+
+void _endwhile(nodeADT node, Block * my_block) {
+
+//	printf("ENDWHILE -> N = %d\n", getParam(node));
+
+	execute((nodeADT) getReturnTO(node), my_block);
 }
 
 nodeADT parse(FILE * file, int state) {

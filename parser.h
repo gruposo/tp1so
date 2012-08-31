@@ -32,4 +32,14 @@ void printList(nodeADT node);
 void execute(nodeADT node, Block * my_block);
 void printMemory(Block * my_block);
 
+void _inc(nodeADT node, Block * my_block);
+void _dec(nodeADT node, Block * my_block);
+void _mr(nodeADT node, Block * my_block);
+void _ml(nodeADT node, Block * my_block);
+void _cz(nodeADT node, Block * my_block);
+void _if(nodeADT node, Block * my_block);
+void _endif(nodeADT node, Block * my_block);
+void _while(nodeADT node, Block * my_block);
+void _endwhile(nodeADT node, Block * my_block);
+
 #endif
