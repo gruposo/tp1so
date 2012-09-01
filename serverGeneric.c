@@ -17,8 +17,9 @@ int main(void) {
 	message_t message;
 	FILE * file;
 	static struct sigaction act;
+	sem_t * semaphore;
 	
-	mqid = IPC_init(SERVER, "/tmp/fifo");
+	mqid = IPC_init(SERVER, "/tmp/fifo", semaphore);
 	fd = IPC_connect(SERVER, "/tmp/fifo");
 	public_fd = fd;
 	void catchSignal(int signal);
@@ -53,10 +54,9 @@ void programAttention(FILE * file, int pid) {
 	int c, fd, i, mqid;
 	char private_fifo[PATH_SIZE], semaphore_path[PATH_SIZE];
 	message_t message;
-	sem_t * semaphore;
-	
 	nodeADT first;
 	Block my_block;
+	void * private_mem;
 	
 	my_block.boolean = FALSE;
 	my_block.current = 0;
@@ -77,12 +77,8 @@ void programAttention(FILE * file, int pid) {
 	
 	memcpy(message.buffer, serialize_mem(my_block.memory), 4000);
 	
-	semaphore = sem_open(semaphore_path, O_CREAT);
-	
-	mqid = IPC_init(SERVER, private_fifo);
+
 	fd = IPC_connect(SERVER, private_fifo);
-	
-	sem_post(semaphore);
 	IPC_send(message, fd, pid);
 }
 

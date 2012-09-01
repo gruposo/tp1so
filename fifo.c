@@ -7,6 +7,7 @@ int
 IPC_init(int pid, char * pathname) {
 	if(mkfifo(pathname, 0666) == -1) {
 		printf("%s", "Couldn't create fifo\n");
+		exit(-1);
 	}
 	
 	return 0;

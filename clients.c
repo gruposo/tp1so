@@ -13,6 +13,7 @@ int main(void) {
 
 	for (i = 0; i < 100; i++) {
 		switch (pid = fork()) {
+		
 		case -1:
 			printf("Server couldn't fork\n");
 			exit(-1);
@@ -26,6 +27,5 @@ int main(void) {
 		}
 	}
 	//si alguien esta leyendo y vienen y me escriben el que intenta escribir se bloquea, ahi tengo que desbloquearlo
-
 	return 0;
 }
