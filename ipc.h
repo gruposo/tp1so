@@ -2,7 +2,7 @@
 #define IPC_H_
 
 #include <semaphore.h>
-#define SERVER 1L
+#define SERVER 3L
 #define MAX_BUFFER_SIZE 4000
 #define VEC_SIZE 1000
 

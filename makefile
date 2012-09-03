@@ -1,5 +1,5 @@
 ifndef IPC
-	IPC = shmem
+	IPC = fifo
 endif
 
 CFLAGS= -lpthread -g

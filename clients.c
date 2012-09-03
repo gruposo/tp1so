@@ -11,7 +11,7 @@ int main(void) {
 	sprintf(client1, "%s%d%s", "archivo", 2, ".txt");
 	sprintf(client2, "%s%d%s", "archivo", 3, ".txt");
 
-	for (i = 0; i < 100; i++) {
+	for (i = 0; i < 1000; i++) {
 		switch (pid = fork()) {
 		
 		case -1:

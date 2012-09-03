@@ -13,12 +13,11 @@ int
 IPC_connect(int pid, char * ipc_path) {
 	int shmid;
 
-	if ((shmid = shmget(pid, sizeof(message_t), IPC_CREAT)) == -1) {
+	if ((shmid = shmget(pid, sizeof(message_t), 0666 | IPC_CREAT)) == -1) {
 		printf("Couldn't allocate shared memory\n");
 		exit(-1);
 	}
-
-printf("SHMID = %d\n", shmid);
+//	printf("SHMID = %d\n", shmid);
 	return shmid;
 }
 
@@ -31,9 +30,7 @@ void
 IPC_send(message_t msg, int fd, int pid, sem_t * semaphore) {
 	message_t * memory;
 	memory = (message_t *)shmat(fd, NULL,0);
-	printf("ANTES DE ENVIAR\n");
-	//memcpy(memory, &msg, sizeof(message_t));
-	printf("DESPUES DE ENVIAR\n");
+	memcpy((void*)memory, (void*)&msg, sizeof(message_t));
 	sem_post(semaphore);
 }
 
