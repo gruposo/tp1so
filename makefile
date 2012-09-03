@@ -1,5 +1,5 @@
 ifndef IPC
-	IPC = fifo
+	IPC = sockets
 endif
 
 CFLAGS= -lpthread -g

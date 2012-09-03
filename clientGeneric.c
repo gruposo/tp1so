@@ -42,7 +42,7 @@ main(int argc, char * argv[]) {
 	IPC_send(message,fd, SERVER, sem_public);
 
 	//recibo la respuesta del servidor
-
+printf("YA ENVIO EL MENSAJE\n");
 	message2 = IPC_receive(fd2, pid, sem_private);
 	ans = (int *)deserialize_mem(message2.buffer);
 	printResult(pid, argv[1], ans);

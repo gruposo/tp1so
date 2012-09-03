@@ -11,6 +11,7 @@ typedef struct {
 	char buffer[MAX_BUFFER_SIZE];
 	int contenttypesize;
 	int contentsize;
+	int sockaddr_p;
 } message_t;
 
 

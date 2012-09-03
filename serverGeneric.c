@@ -31,8 +31,9 @@ int main(void) {
 	sigaction(SIGABRT, &act, NULL );
 
 	while (1) {
+		printf("LLEGO\n");
 		message = IPC_receive(fd, SERVER, sem_public);
-	//	printf("LLEGO\n");
+		printf("LLEGO\n");
 
 		if ((file = fopen(message.buffer, "r")) != NULL ) {
 			switch (pid = fork()) {
