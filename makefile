@@ -1,5 +1,5 @@
 ifndef IPC
-	IPC = mqueue
+	IPC = shmem
 endif
 
 CFLAGS= -lpthread -g

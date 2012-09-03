@@ -4,8 +4,8 @@
 #include "ipc.h"
 
 int
-IPC_init(int pid, char * pathname) {
-	if(mkfifo(pathname, 0666) == -1) {
+IPC_init(int pid, char * ipc_path) {
+	if(mkfifo(ipc_path, 0666) == -1) {
 		printf("%s", "Couldn't create fifo\n");
 		exit(-1);
 	}
@@ -13,11 +13,11 @@ IPC_init(int pid, char * pathname) {
 	return 0;
 }
 
-int
-IPC_connect(int mqid, char * pathname) {
+int 
+IPC_connect(int pid, char * ipc_path){
 	int fd;
 	
-	if ((fd = open(pathname, O_RDWR)) < 0) {
+	if ((fd = open(ipc_path, O_RDWR)) < 0) {
 		printf("%s","Couldn't connect to the fifo\n");
 	}
 	
@@ -25,8 +25,8 @@ IPC_connect(int mqid, char * pathname) {
 }
 
 
-void
-IPC_send(message_t msg, int fd, int pid) {
+void 
+IPC_send(message_t msg, int fd, int pid, sem_t * semaphore) {
 	int nwrite;
 	
 	if ((nwrite = write(fd, &msg, sizeof(msg))) == -1) {
@@ -35,7 +35,7 @@ IPC_send(message_t msg, int fd, int pid) {
 }
 
 message_t
-IPC_receive(int fd, int pid) {
+IPC_receive(int fd, int pid, sem_t * semaphore) {
 	message_t message;
 	
 	if (read(fd, &message,sizeof(message)) < 0) {

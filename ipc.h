@@ -1,6 +1,7 @@
 #ifndef IPC_H_
 #define IPC_H_
 
+#include <semaphore.h>
 #define SERVER 1L
 #define MAX_BUFFER_SIZE 4000
 #define VEC_SIZE 1000
@@ -21,8 +22,8 @@ int IPC_connect(int pid, char * ipc_path);
 
 void IPC_close(int fd, char * ipc_path, int pid);
 
-void IPC_send(message_t msg, int fd, int pid);
+void IPC_send(message_t msg, int fd, int pid, sem_t * semaphore);
 
-message_t IPC_receive(int fd, int pid);
+message_t IPC_receive(int fd, int pid, sem_t * semaphore);
 
 #endif

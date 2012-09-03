@@ -16,10 +16,13 @@ int main(void) {
 	int fd, pid, mqid;
 	message_t message;
 	FILE * file;
+	char sem_public_path[PATH_SIZE];
 	static struct sigaction act;
-	sem_t * semaphore;
+	sem_t * sem_public;
 	
-	mqid = IPC_init(SERVER, "/tmp/fifo", semaphore);
+	sprintf(sem_public_path, "%s%d", "/semaphore", (int)SERVER);
+	sem_public = sem_open(sem_public_path, O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH,0);
+	mqid = IPC_init(SERVER, "/tmp/fifo");
 	fd = IPC_connect(SERVER, "/tmp/fifo");
 	public_fd = fd;
 	void catchSignal(int signal);
@@ -28,7 +31,8 @@ int main(void) {
 	sigaction(SIGABRT, &act, NULL );
 
 	while (1) {
-		message = IPC_receive(fd, SERVER);
+		message = IPC_receive(fd, SERVER, sem_public);
+		printf("LLEGO\n");
 
 		if ((file = fopen(message.buffer, "r")) != NULL ) {
 			switch (pid = fork()) {
@@ -52,11 +56,11 @@ int main(void) {
 
 void programAttention(FILE * file, int pid) {
 	int c, fd, i, mqid;
-	char private_fifo[PATH_SIZE], semaphore_path[PATH_SIZE];
+	char private_fifo[PATH_SIZE], sem_private_path[PATH_SIZE];
 	message_t message;
 	nodeADT first;
 	Block my_block;
-	void * private_mem;
+	sem_t * sem_private;
 	
 	my_block.boolean = FALSE;
 	my_block.current = 0;
@@ -73,13 +77,15 @@ void programAttention(FILE * file, int pid) {
 	execute(first, &my_block);
 	
 	sprintf(private_fifo, "%s%d", "/tmp/fifo", pid);
-	sprintf(semaphore_path, "%s%d", "/semaphore", pid);
+	sprintf(sem_private_path, "%s%d", "/semaphore", pid);
+	
+	sem_private = sem_open(sem_private_path, O_CREAT);
 	
 	memcpy(message.buffer, serialize_mem(my_block.memory), 4000);
 	
 
-	fd = IPC_connect(SERVER, private_fifo);
-	IPC_send(message, fd, pid);
+	fd = IPC_connect(pid, private_fifo);
+	IPC_send(message, fd, pid, sem_private);
 }
 
 void catchSignal(int signal) {

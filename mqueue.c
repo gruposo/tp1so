@@ -41,8 +41,8 @@ IPC_close(int fd, char * pathname, int pid) {
 	}
 }
 
-void
-IPC_send(message_t msg, int fd, int pid) {
+void 
+IPC_send(message_t msg, int fd, int pid, sem_t * semaphore) {
 	struct to_send {
 		long mtype;
 		message_t message;
@@ -61,7 +61,7 @@ IPC_send(message_t msg, int fd, int pid) {
 }
 
 message_t
-IPC_receive(int fd, int pid) {
+IPC_receive(int fd, int pid, sem_t * semaphore) {
 	struct to_receive {
 		long mtype;
 		message_t message;
