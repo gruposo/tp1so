@@ -4,14 +4,17 @@
 #define PATH_SIZE 1000
 
 int main(void) {
-	char client1[PATH_SIZE];
-	char client2[PATH_SIZE];
-	int pid, i;
+	char client[PATH_SIZE];
+	//char client2[PATH_SIZE];
+	int pid, i,j;
 
-	sprintf(client1, "%s%d%s", "archivo", 2, ".txt");
-	sprintf(client2, "%s%d%s", "archivo", 3, ".txt");
+	//sprintf(client1, "%s%d%s", "archivo", 2, ".txt");
+	//sprintf(client2, "%s%d%s", "archivo", 3, ".txt");
 
-	for (i = 0; i < 1000; i++) {
+	
+	for (i = 0; i < 500; i++) {
+		j = i % 5;
+		sprintf(client, "%s%d", "archivo", j);  
 		switch (pid = fork()) {
 		
 		case -1:
@@ -19,13 +22,11 @@ int main(void) {
 			exit(-1);
 			break;
 		case 0:
-			execl("./clientGeneric", "clientGeneric", client1, NULL );
+			execl("./clientGeneric", "clientGeneric", client, NULL );
 			break;
 		default:
-			//execl("/home/juan/Descargas/tp1so/clientGeneric", "clientGeneric",client2,NULL);
 			break;
 		}
 	}
-	//si alguien esta leyendo y vienen y me escriben el que intenta escribir se bloquea, ahi tengo que desbloquearlo
 	return 0;
 }

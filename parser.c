@@ -7,32 +7,12 @@
 
 #define MEMSIZE 1000
 
-//int main(int argc, char ** argv) {
-//
-//	FILE * file;
-//	int i;
-//	nodeADT first;
-//	Block my_block;
-//
-//	my_block.boolean = TRUE;
-//	my_block.current = 0;
-//
-//	for (i = 0; i < 1000; i++) {
-//		(my_block.memory)[i] = 0;
-//	}
-//
-//	file = fopen(argv[1], "r");
-//
-//	if (!feof(file)) {
-//		first = parse(file, FALSE);
-//	}
-//
-//	fclose(file);
-//	execute(first, &my_block);
-//}
-
 void execute(nodeADT node, Block * my_block) {
 
+	if(node == NULL) {
+		return ;
+	}
+	
 	int operation = getOperation(node);
 
 	int param = getParam(node);
@@ -114,7 +94,7 @@ void _cz(nodeADT node, Block * my_block) {
 
 	nodeADT next = getNext(node);
 
-	my_block->boolean = ((my_block->memory)[my_block->current]) ? TRUE : FALSE;
+	my_block->boolean = ((my_block->memory)[my_block->current]) ? FALSE : TRUE;
 
 	if (next != NULL ) {
 		execute(next, my_block);
@@ -157,7 +137,6 @@ void _while(nodeADT node, Block * my_block) {
 //	printf("WHILE -> N = %d\n", getParam(node));
 
 	execute(getExe(node), my_block);
-
 	if ((my_block->boolean) == TRUE) {
 
 		execute(getNext(node), my_block);
@@ -180,7 +159,7 @@ void _endwhile(nodeADT node, Block * my_block) {
 }
 
 nodeADT parse(FILE * file, int state) {
-	nodeADT first;
+	nodeADT first = NULL;
 	nodeADT current;
 	tNumbers vecWhile;
 	tNumbers vecIf;
@@ -248,6 +227,10 @@ nodeADT parse(FILE * file, int state) {
 		case ')':
 			if (vecBalance.numbers[vecBalance.pos] != '(') {
 				if (state) {
+					if(index != 0 && com == empty) {
+						printf("Invalid parser\n");
+						exit(-1);
+					}
 					fseek(file, -1, SEEK_CUR);
 					return first;
 				} else {
@@ -345,42 +328,8 @@ nodeADT parse(FILE * file, int state) {
 		fprintf(stderr, "Parser invalido8\n");
 		exit(1);
 	}
-
 	return first;
 }
-
-//void printList(nodeADT node) {
-//
-//	print(node);
-//
-//	if (getExe(node) != NULL) {
-//
-//		printf("\t Expr - ABRE\n");
-//
-//		printList(getExe(node));
-//
-//		printf("\t Expr - CIERRA\n");
-//	}
-////
-////	if ((nodeADT)getReturnTO(node) != NULL) {
-////
-////		printf("\t RETORNA A: ");
-////
-////		print((nodeADT)getReturnTO(node));
-////	}
-////
-////	if ((nodeADT)getJump(node) != NULL) {
-////
-////		printf("\t SALTA A: ");
-////
-////		print((nodeADT)getJump(node));
-////	}
-//
-//	if (getNext(node) != NULL) {
-//		printf("->NEXT->");
-//		printList(getNext(node));
-//	}
-//}
 
 char *
 resizeMemChar(int index, char * vec) {
@@ -388,8 +337,7 @@ resizeMemChar(int index, char * vec) {
 	if ((index % BLOQUE) == 0) {
 		aux = realloc(vec, (index + BLOQUE) * sizeof(char));
 		if (aux == NULL ) {
-			printf(
-					"Hubo un problema al reservar memoria. Intente nuevamente\n");
+			printf("Hubo un problema al reservar memoria. Intente nuevamente\n");
 			exit(1);
 		} else {
 			vec = aux;
@@ -425,11 +373,10 @@ void hasNumbers(char * vec, int dim) {
 }
 
 int toInt(char*string, int index) {
-
 	int N = 0;
 	int mult = 1;
 	int i;
-
+	
 	for (i = index - 1; i >= 0; i--) {
 		if (!(string[i] >= '0') || !(string[i] <= '9')) {
 			fprintf(stderr, "Parser invalido\n");
@@ -438,19 +385,6 @@ int toInt(char*string, int index) {
 		N += ((string[i] - '0') * mult);
 		mult *= 10;
 	}
-
+	
 	return N;
 }
-
-//void printMemory(Block * my_block) {
-//
-//	int i;
-//	for (i = 0; i < 1000; i++) {
-//
-//		if ((my_block->memory)[i] != 0) {
-//
-//			printf("Memoria nro %d: %d\n", i, (my_block->memory)[i]);
-//		}
-//	}
-//}
-

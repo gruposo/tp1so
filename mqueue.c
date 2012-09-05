@@ -7,13 +7,13 @@
 int firstTime = 1;
 int global_mqid = 0;
 
-int
-IPC_init(int pid, char * pathname) {
+int 
+IPC_init(int pid, char * ipc_path) {
 	return 0;
 }
 
 int
-IPC_connect(int pid, char * pathname) {
+IPC_connect(int pid, char * ipc_path) {
 	int mqid;
 	
 	if(firstTime) {
@@ -42,7 +42,7 @@ IPC_close(int fd, char * pathname, int pid) {
 }
 
 void 
-IPC_send(message_t msg, int fd, int pid, sem_t * semaphore) {
+IPC_send(message_t msg, int fd, int pid) {
 	struct to_send {
 		long mtype;
 		message_t message;
@@ -61,7 +61,7 @@ IPC_send(message_t msg, int fd, int pid, sem_t * semaphore) {
 }
 
 message_t
-IPC_receive(int fd, int pid, sem_t * semaphore) {
+IPC_receive(int fd, int pid) {
 	struct to_receive {
 		long mtype;
 		message_t message;

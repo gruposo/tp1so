@@ -16,14 +16,11 @@ int main(void) {
 	int fd, pid, mqid;
 	message_t message;
 	FILE * file;
-	char sem_public_path[PATH_SIZE];
 	static struct sigaction act;
-	sem_t * sem_public;
+	char * path = "/ipc";
 	
-	sprintf(sem_public_path, "%s%d", "/semaphore", (int)SERVER);
-	sem_public = sem_open(sem_public_path, O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH,0);
-	mqid = IPC_init(SERVER, "/tmp/fifo");
-	fd = IPC_connect(SERVER, "/tmp/fifo");
+	mqid = IPC_init(SERVER, path);
+	fd = IPC_connect(SERVER, path);
 	public_fd = fd;
 	void catchSignal(int signal);
 	act.sa_handler = catchSignal;
@@ -31,10 +28,8 @@ int main(void) {
 	sigaction(SIGABRT, &act, NULL );
 
 	while (1) {
-		printf("LLEGO\n");
-		message = IPC_receive(fd, SERVER, sem_public);
-		printf("LLEGO\n");
-
+		message = IPC_receive(fd, SERVER);
+		
 		if ((file = fopen(message.buffer, "r")) != NULL ) {
 			switch (pid = fork()) {
 			case -1:
@@ -57,11 +52,10 @@ int main(void) {
 
 void programAttention(FILE * file, int pid) {
 	int c, fd, i, mqid;
-	char private_fifo[PATH_SIZE], sem_private_path[PATH_SIZE];
 	message_t message;
 	nodeADT first;
 	Block my_block;
-	sem_t * sem_private;
+	char * path = "/ipc";
 	
 	my_block.boolean = FALSE;
 	my_block.current = 0;
@@ -76,21 +70,18 @@ void programAttention(FILE * file, int pid) {
 	
 	fclose(file);
 	execute(first, &my_block);
-	
-	sprintf(private_fifo, "%s%d", "/tmp/fifo", pid);
-	sprintf(sem_private_path, "%s%d", "/semaphore", pid);
-	
-	sem_private = sem_open(sem_private_path, O_CREAT);
+	printf("SALIO DEL EXECUTE\n");
 	
 	memcpy(message.buffer, serialize_mem(my_block.memory), 4000);
 	
 
-	fd = IPC_connect(pid, private_fifo);
-	IPC_send(message, fd, pid, sem_private);
+	fd = IPC_connect(pid, path);
+	IPC_send(message, fd, pid);
 }
 
 void catchSignal(int signal) {
+	char * path = "/ipc";
 	printf("ABORT was catched. Closing all IPCS\n");
-	IPC_close(public_fd, "/tmp/fifo", SERVER);
+	IPC_close(public_fd, path, SERVER);
 	exit(1);
 }
