@@ -5,6 +5,7 @@
 #include <sys/shm.h>
 #include <semaphore.h>
 #include <fcntl.h>
+#include <unistd.h>
 #include "shmem.h"
 
 static sem_t * public_sem_wr = NULL;
@@ -22,7 +23,7 @@ IPC_init(int pid, char * ipc_path) {
 	} else {
 		char private_path[PATH_SIZE];
 		sprintf(private_path, "%s%d", ipc_path, pid);
-		sem_t * private_sem = sem_open(private_path, O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH, 0);
+		sem_open(private_path, O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH, 0);
 	}
 }
 

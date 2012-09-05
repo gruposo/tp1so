@@ -1,5 +1,5 @@
 ifndef IPC
-	IPC = sockets
+	IPC = shmem
 endif
 
 CFLAGS= -lpthread -g -Wall
@@ -22,10 +22,6 @@ $(TARGET6):	$(TARGET1).c $(TARGET2).c $(TARGET3).c $(TARGET4).c $(TARGET5).c $(T
 $(TARGET7):	$(TARGET1).c $(TARGET2).c $(TARGET3).c $(TARGET4).c $(TARGET5).c $(TARGET7).c
 	gcc -o $(TARGET7) $(TARGET1).c $(TARGET2).c $(TARGET3).c $(TARGET4).c $(TARGET5).c $(TARGET7).c $(TARGET8).c $(CFLAGS)
 
-$(TARGET9):	$(TARGET9).c
-	gcc -o $(TARGET9).c $(CFLAGS)
-
 clean:
 	\rm -f clientGeneric
 	\rm -f serverGeneric
-	\rm -f clients
