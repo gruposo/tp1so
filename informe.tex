@@ -1,0 +1,124 @@
+\documentclass[a4paper, 10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+
+\renewcommand{\shorthandsspanish}{}
+
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+
+\begin{document}
+\begin{titlepage}
+\begin{center}
+
+\textsc{\LARGE Sistemas Operativos}\\[1.5cm]
+\textsc{\Large Trabajo Práctico Especial 1}\\[0.5cm]
+
+\HRule \\[0.4cm]
+ {\huge \bfseries Filesystems, IPCs y Servidores Concurrentes}\\[0.4cm]
+\HRule \\[1.5cm]
+
+
+\Large Alumnos: \\ [0.25cm]
+\begin{tabular}{l @{\ \ -\ \ }l}
+
+\emph{\Large Alderete, Facundo} & \Large 51063\\[0.2cm]
+\emph{\Large Buireo, Juan Martín} & \Large 51061\\[0.2cm]
+\emph{\Large Perez Cuñarro, Javier} & \Large 49729\\[0.2cm]
+
+\end{tabular}
+
+\vspace{9cm}
+
+\textsc{\Large ITBA - Cuatrimestre 2 - 2012}
+\vspace{4cm}
+
+\end{center}
+\end{titlepage}
+
+\clearpage
+
+%%%%%%%%%%%%
+
+\tableofcontents
+\clearpage
+
+%%%%%%%%%%%%%%%%
+\section{Introducción}
+
+Este trabajo consistió en simular un intérprete de un lenguaje de programación especificado por la cátedra. Este lenguaje consiste en instrucciones simples que modifican valores numéricos en memoria (por ejemplo, {\tt inc(2)}), instrucciones que modifican la posición actual en memoria ({\tt como mr(5)}) e instrucciones condicionales que afectan el flujo del código (como {\tt while(9, cz)}).\\
+
+El simulador es una aplicación del tipo cliente/servidor en la cual los clientes envían programas al servidor para que sean interpretados. El servidor fue pensado para poder recibir cientos de pedidos de clientes distintos a la vez, y ejecutar los programas de forma concurrente. Al correr, estos programas modifican la zona de memoria propia de cada cliente. El resultado de la ejecución, entonces, se obtiene devolviendo la memoria modificada al cliente.\\
+
+Para resolver este trabajo, se utilizó el lenguaje \textit{C} principalmente debido a los requerimientos de bajo nivel de la consigna. Se utilizó el entorno de desarrollo \textit{Eclipse} junto con aplicaciones propias de Unix que corren en terminal --- tales como {\tt ps} o {\tt sockstat} --- para supervisar el estado de los IPCs creados. Se creó un proyecto en \textit{Github} para aprovechar el sistema de control de versiones y para poder desarrollar sobre varios \textit{branches} a la vez.\\
+
+%%%%%%%%%%%%%%%%
+\section{Objetivo}
+
+De acuerdo al enunciado, el objetivo de este trabajo es familiarizarse con el uso de sistemas cliente-servidor concurrentes, implementando el servidor mediante la creación de procesos hijos utilizando {\tt fork()} y mediante la creación de threads. Al mismo tiempo, ejercitar el uso de los distintos tipos de primitivas de sincronización y comunicación de procesos (IPC) y manejar con autoridad el filesystem de \textit{Linux} desde el lado usuario.\\
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Consideraciones realizadas}
+
+\begin{itemize}
+
+\item El programa permite que se pase una única opción por línea de comando por vez. Una invocación válida es:
+\\
+\\\begin{tt}
+alchemy -b steam
+\end{tt}\\\\
+Pero una invocación inválida es:
+\\
+\\\begin{tt}
+alchemy -b steam -e mud -t
+\end{tt}\\\\
+La única excepción ocurre cuando se especifican archivos .name y/o .magic. Ejemplos de invocación permitidos son:
+\\
+\\\begin{tt}
+alchemy -t -n misnombres.name -m misarchivos.magic\\
+alchemy -n misnombres.name -m misarchivos.magic -t\\
+alchemy -n misnombres.name -t -m misarchivos.magic\\
+alchemy -n misnombres.name -m misarchivos.magic -b mud\\
+alchemy -n misnombres.name -e steam\\
+alchemy -b rain -m misarchivos.magic
+\end{tt}\\\\
+En todos estos casos, se toman los elementos y las combinaciones de los archivos ingresados. Si se ingresa sólo el archivo de combinaciones por ejemplo, se toman los nombres de los elementos del archivo predeterminado.\\
+Un ejemplo no permitido es el siguiente:\\
+\\\begin{tt}
+alchemy -n misnombres.name -e steam -t\\
+\end{tt}\\\\
+
+\item Se considera que un elemento está formado por una o más letras minúsculas y mayúsculas, permitiendo espacios entre medio. No se pueden incluir números ni símbolos como parte de un nombre de elemento, a excepción del signo de admiración !. Estos nombres son case-sensitive, es decir, los elementos "air", "Air" y "AIR" son todos distintos para el programa.\\
+
+\item Se decidió que la cantidad de espacios entre palabras de un nombre de elemento es irrelevante. Haya un sólo espacio, tres, o cinco, siempre se tomará un único espacio, por lo que esos tres casos serían equivalentes. Por ejemplo, "light \, \, bulb" equivale a ingresar "light bulb" ya que los cuatro espacios ingresados se transforman en un único. Esta decisión surge de que al ingresar parametros por línea de comando en Java, se recibe en el args[ ] las palabras ya separadas, ignorando todos los espacios adicionales entre ellas.\\
+Ejemplos del comportamiento del programa son:\\
+\\\begin{tt}
+alchemy -e light \, \, bulb
+\end{tt}\\\\
+Se devuelven todos los elementos que se puedan formar a partir de "light bulb".\\
+\\\begin{tt}
+light \, \, bulb + light bulb
+\end{tt}\\\\
+Se devuelve el elemento resultante de combinar "light bulb" consigo mismo.\\
+A raíz de esta decisión, se devuelve un mensaje de error (elemento repetido) si en el archivo .name se presenta una situación similar a:\\
+\\\begin{tt}
+fire\\light \, \, bulb\\light bulb
+\end{tt}\\
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Descripción del desarrollo del trabajo}
+
+Para este trabajo se eligió Java, en parte para aprovechar la orientación a objetos. Cada elemento es una instancia de la clase Element, que contiene un string con su nombre, un map "combinations" con todas las combinaciones posibles (key: elemento con quien se combina, value: elemento obtenido de la combinación), y un set "origins" con todos los elementos con los cuales se puede obtener el elemento actual. \\
+La clase Alchemy contiene un map "elements" que agrupa todos los elementos posibles para combinar con un número entero que corresponde a su número de línea en el archivo .name. 
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Dificultades encontradas}
+
+Al comenzar a desarrollar los parsers, se intentó usar estados de JFlex pensando que facilitarían el manejo de expresiones y producirían un código más legible. Sin embargo, expresiones regulares "largas" resultaron más flexibles y sencillas para manejar.\\
+
+Con el uso de macros sucedió lo contrario. No se las consideró desde un principio, hasta que el código se tornó repetitivo y se decidió simplificarlo con su uso.
+
+%%%%%%%%%%%%%%%%%%%%%
+\section{Conclusiones}
+Este trabajo fue el primer acercamiento a Lex por parte de los integrantes del grupo. Por más que no se haya hecho uso de las herramientas más avanzadas y desconocidas de Lex, se logró aprender su uso y comprender sus beneficios como parser. Viendo las ventajas frente a otros métodos más básicos de parseo, se espera volver a usar Lex en trabajos futuros. 
+\end{document}
