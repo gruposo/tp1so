@@ -2,24 +2,24 @@
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
-#include <semaphore.h>
 #include <fcntl.h>
+#include <unistd.h>
 #include "parser.h"
 #include "serializer.h"
-#define PATH_SIZE 32
 #include "ipc.h"
-void programAttention(FILE * file, int pid);
+#include "serverGeneric.h"
+#include "executor.h"
 
 int public_fd = 0;
 
 int main(void) {
-	int fd, pid, mqid;
+	int fd, pid;
 	message_t message;
 	FILE * file;
 	static struct sigaction act;
 	char * path = "/ipc";
 	
-	mqid = IPC_init(SERVER, path);
+	IPC_init(SERVER, path);
 	fd = IPC_connect(SERVER, path);
 	public_fd = fd;
 	void catchSignal(int signal);
@@ -51,7 +51,7 @@ int main(void) {
 }
 
 void programAttention(FILE * file, int pid) {
-	int c, fd, i, mqid;
+	int fd, i;
 	message_t message;
 	nodeADT first;
 	Block my_block;
@@ -70,7 +70,6 @@ void programAttention(FILE * file, int pid) {
 	
 	fclose(file);
 	execute(first, &my_block);
-	printf("SALIO DEL EXECUTE\n");
 	
 	memcpy(message.buffer, serialize_mem(my_block.memory), 4000);
 	

@@ -10,9 +10,9 @@
 #include <netinet/in.h>
 #include "ipc.h"
 
-int 
+void
 IPC_init(int pid, char * ipc_path) {
-	return 0;
+	return;
 }
 
 int
@@ -42,7 +42,6 @@ IPC_connect(int pid, char * ipc_path) {
 void 
 IPC_send(message_t msg, int fd, int pid) {
 	struct sockaddr_un receiver;
-	int receiver_len = sizeof(struct sockaddr_un);
 	char to_path[PATH_SIZE];
 	
 	sprintf(to_path, "%s%d", "/tmp/ipc", pid);

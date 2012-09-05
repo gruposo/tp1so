@@ -7,9 +7,9 @@
 int firstTime = 1;
 int global_mqid = 0;
 
-int 
+void
 IPC_init(int pid, char * ipc_path) {
-	return 0;
+	return ;
 }
 
 int

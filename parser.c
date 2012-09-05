@@ -2,161 +2,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
-
 #include "parser.h"
-
-#define MEMSIZE 1000
-
-void execute(nodeADT node, Block * my_block) {
-
-	if(node == NULL) {
-		return ;
-	}
-	
-	int operation = getOperation(node);
-
-	int param = getParam(node);
-
-	int N = (param >= MEMSIZE) ? (MEMSIZE - 1) : param;
-
-	void (*vecFun[])(nodeADT,
-			Block *)= {_inc, _dec, _mr, _ml, _cz, _if, _endif, _while, _endwhile
-			};
-
-	(*vecFun[operation - 1])(node, my_block);
-}
-
-void _inc(nodeADT node, Block * my_block) {
-
-//	printf("INC -> N = %d\n", getParam(node));
-
-	nodeADT next = getNext(node);
-
-	((my_block->memory)[my_block->current]) += getParam(node);
-
-	if (next != NULL ) {
-		execute(next, my_block);
-	}
-}
-
-void _dec(nodeADT node, Block * my_block) {
-
-//	printf("DEC -> N = %d\n", getParam(node));
-
-	nodeADT next = getNext(node);
-
-	((my_block->memory)[my_block->current]) -= getParam(node);
-
-	if (next != NULL ) {
-		execute(next, my_block);
-	}
-}
-
-void _mr(nodeADT node, Block * my_block) {
-
-//	printf("MR -> N = %d\n", getParam(node));
-
-	nodeADT next = getNext(node);
-
-	int param = getParam(node);
-
-	if (((my_block->current) + param) >= MEMSIZE) {
-		my_block->current = MEMSIZE - 1;
-	} else {
-		(my_block->current) += param;
-	}
-	if (next != NULL ) {
-		execute(next, my_block);
-	}
-}
-
-void _ml(nodeADT node, Block * my_block) {
-
-//	printf("ML -> N = %d\n", getParam(node));
-
-	nodeADT next = getNext(node);
-
-	int param = getParam(node);
-
-	if (((my_block->current) - param) < 0) {
-		my_block->current = 0;
-	} else {
-		(my_block->current) -= param;
-	}
-	if (next != NULL ) {
-		execute(next, my_block);
-	}
-}
-
-void _cz(nodeADT node, Block * my_block) {
-
-//	printf("CZ -> N = %d\n", getParam(node));
-
-	nodeADT next = getNext(node);
-
-	my_block->boolean = ((my_block->memory)[my_block->current]) ? FALSE : TRUE;
-
-	if (next != NULL ) {
-		execute(next, my_block);
-	}
-}
-
-void _if(nodeADT node, Block * my_block) {
-
-//	printf("IF -> N = %d\n", getParam(node));
-
-	execute(getExe(node), my_block);
-
-	if ((my_block->boolean) == TRUE) {
-
-		execute(getNext(node), my_block);
-	} else {
-		nodeADT nodeENDIF = (nodeADT) getJump(node);
-
-		if (getNext(nodeENDIF) != NULL ) {
-
-			execute(getNext(nodeENDIF), my_block);
-		}
-	}
-}
-
-void _endif(nodeADT node, Block * my_block) {
-
-//	printf("ENDIF -> N = %d\n", getParam(node));
-
-	nodeADT next = getNext(node);
-
-	if (next != NULL ) {
-
-		execute(next, my_block);
-	}
-}
-
-void _while(nodeADT node, Block * my_block) {
-
-//	printf("WHILE -> N = %d\n", getParam(node));
-
-	execute(getExe(node), my_block);
-	if ((my_block->boolean) == TRUE) {
-
-		execute(getNext(node), my_block);
-	} else {
-
-		nodeADT nodeENDWHILE = (nodeADT) getJump(node);
-
-		if (getNext(nodeENDWHILE) != NULL ) {
-
-			execute(getNext(nodeENDWHILE), my_block);
-		}
-	}
-}
-
-void _endwhile(nodeADT node, Block * my_block) {
-
-//	printf("ENDWHILE -> N = %d\n", getParam(node));
-
-	execute((nodeADT) getReturnTO(node), my_block);
-}
 
 nodeADT parse(FILE * file, int state) {
 	nodeADT first = NULL;
@@ -172,10 +18,9 @@ nodeADT parse(FILE * file, int state) {
 	vecBalance.pos = 0;
 	char * string = malloc(sizeof(char) * BLOQUE);
 	int index = 0;
-	int c, i;
+	int c;
 	Commands com = empty;
 	int isFirst = TRUE;
-
 	Stack stack;
 
 	stack_init(&stack);
@@ -186,31 +31,8 @@ nodeADT parse(FILE * file, int state) {
 			vecBalance.numbers = resizeMemInt(vecBalance.pos,
 					vecBalance.numbers);
 			(vecBalance.numbers)[vecBalance.pos] = c;
-			for (i = 0; i < index; i++) {
-				string[i] = toupper(string[i]);
-			}
-			if (strncmp(string, "INC", index) == 0) {
-				com = inc;
-			} else if (strncmp(string, "DEC", index) == 0) {
-				com = dec;
-			} else if (strncmp(string, "MR", index) == 0) {
-				com = mr;
-			} else if (strncmp(string, "ML", index) == 0) {
-				com = ml;
-			} else if (strncmp(string, "CZ", index) == 0) {
-				com = cz;
-			} else if (strncmp(string, "IF", index) == 0) {
-				com = ifa;
-			} else if (strncmp(string, "ENDIF", index) == 0) {
-				com = endif;
-			} else if (strncmp(string, "WHILE", index) == 0) {
-				com = whilea;
-			} else if (strncmp(string, "ENDWHILE", index) == 0) {
-				com = endwhile;
-			} else {
-				fprintf(stderr, "Parser invalido1\n");
-				exit(1);
-			}
+			toUpperString(string, index);
+			com = getCommand(string, index);
 
 			if (isFirst) {
 				first = newNode(com);
@@ -221,29 +43,25 @@ nodeADT parse(FILE * file, int state) {
 				addNext(current, next);
 				current = next;
 			}
-
 			index = 0;
 			break;
 		case ')':
 			if (vecBalance.numbers[vecBalance.pos] != '(') {
 				if (state) {
-					if(index != 0 && com == empty) {
-						printf("Invalid parser\n");
-						exit(-1);
+					if (index != 0 && com == empty) {
+						fatal();
 					}
 					fseek(file, -1, SEEK_CUR);
 					return first;
 				} else {
-					fprintf(stderr, "Parser invalido2\n");
-					exit(1);
+					fatal();
 				}
 			} else {
 				vecBalance.numbers[vecBalance.pos] = 0;
 			}
 			if (index == 0) {
 				if (com != cz) {
-					fprintf(stderr, "Parser invalido3\n");
-					exit(1);
+					fatal();
 				} else {
 					addParam(current, -1);
 				}
@@ -252,8 +70,7 @@ nodeADT parse(FILE * file, int state) {
 				if (com == endif) {
 					if (vecIf.numbers[(vecIf.pos) - 1]
 							!= toInt(string, index)) {
-						fprintf(stderr, "Parser invalido4\n");
-						exit(1);
+						fatal();
 					}
 					(vecIf.pos) -= 1;
 
@@ -266,8 +83,7 @@ nodeADT parse(FILE * file, int state) {
 				} else if (com == endwhile) {
 					if (vecWhile.numbers[(vecWhile.pos) - 1]
 							!= toInt(string, index)) {
-						fprintf(stderr, "Parser invalido5\n");
-						exit(1);
+						fatal();
 					}
 					(vecWhile.pos) -= 1;
 
@@ -278,8 +94,7 @@ nodeADT parse(FILE * file, int state) {
 					addParam(current, getParam(returnTO));
 
 				} else if (com == cz) {
-					fprintf(stderr, "Parser invalido6\n");
-					exit(1);
+					fatal();
 				} else {
 					hasNumbers(string, index);
 
@@ -291,14 +106,11 @@ nodeADT parse(FILE * file, int state) {
 			break;
 		case ',':
 			if (index != 0 && (com == ifa || com == whilea)) {
-
 				hasNumbers(string, index);
 				addParam(current, toInt(string, index));
-
 				if (com == ifa) {
 					vecIf.numbers = resizeMemInt(vecIf.pos, vecIf.numbers);
 					vecIf.numbers[(vecIf.pos)++] = toInt(string, index);
-
 				} else {
 					vecWhile.numbers = resizeMemInt(vecWhile.pos,
 							vecWhile.numbers);
@@ -310,8 +122,7 @@ nodeADT parse(FILE * file, int state) {
 				addExe(current, parse(file, TRUE));
 
 			} else {
-				fprintf(stderr, "Parser invalido7\n");
-				exit(1);
+				fatal();
 			}
 			break;
 		case ' ':
@@ -325,8 +136,7 @@ nodeADT parse(FILE * file, int state) {
 		}
 	}
 	if (vecBalance.numbers[vecBalance.pos] != 0) {
-		fprintf(stderr, "Parser invalido8\n");
-		exit(1);
+		fatal();
 	}
 	return first;
 }
@@ -337,8 +147,9 @@ resizeMemChar(int index, char * vec) {
 	if ((index % BLOQUE) == 0) {
 		aux = realloc(vec, (index + BLOQUE) * sizeof(char));
 		if (aux == NULL ) {
-			printf("Hubo un problema al reservar memoria. Intente nuevamente\n");
-			exit(1);
+			printf(
+					"There was a problem allocating memory. Try again\n");
+			exit(-1);
 		} else {
 			vec = aux;
 		}
@@ -353,8 +164,8 @@ resizeMemInt(int index, int * vec) {
 		aux = realloc(vec, (index + BLOQUE) * sizeof(int));
 		if (aux == NULL ) {
 			printf(
-					"Hubo un problema al reservar memoria. Intente nuevamente\n");
-			exit(1);
+					"There was a problem allocating memory. Try again\n");
+			exit(-1);
 		} else {
 			vec = aux;
 		}
@@ -366,8 +177,7 @@ void hasNumbers(char * vec, int dim) {
 	int i;
 	for (i = 0; i < dim; i++) {
 		if (!isdigit(vec[i])) {
-			fprintf(stderr, "Parser invalido\n");
-			exit(1);
+			fatal();
 		}
 	}
 }
@@ -376,15 +186,53 @@ int toInt(char*string, int index) {
 	int N = 0;
 	int mult = 1;
 	int i;
-	
+
 	for (i = index - 1; i >= 0; i--) {
 		if (!(string[i] >= '0') || !(string[i] <= '9')) {
-			fprintf(stderr, "Parser invalido\n");
-			exit(1);
+			fatal();
 		}
 		N += ((string[i] - '0') * mult);
 		mult *= 10;
 	}
-	
+
 	return N;
+}
+
+Commands getCommand(char * string, int index) {
+	Commands com = empty;
+
+	if (strncmp(string, "INC", index) == 0) {
+		com = inc;
+	} else if (strncmp(string, "DEC", index) == 0) {
+		com = dec;
+	} else if (strncmp(string, "MR", index) == 0) {
+		com = mr;
+	} else if (strncmp(string, "ML", index) == 0) {
+		com = ml;
+	} else if (strncmp(string, "CZ", index) == 0) {
+		com = cz;
+	} else if (strncmp(string, "IF", index) == 0) {
+		com = ifa;
+	} else if (strncmp(string, "ENDIF", index) == 0) {
+		com = endif;
+	} else if (strncmp(string, "WHILE", index) == 0) {
+		com = whilea;
+	} else if (strncmp(string, "ENDWHILE", index) == 0) {
+		com = endwhile;
+	} else {
+		fatal();
+	}
+	return com;
+}
+
+void fatal() {
+	printf("Invalid parser. Please make another file\n");
+	exit(-1);
+}
+
+void toUpperString(char * string, int index) {
+	int i;
+	for (i = 0; i < index; i++) {
+		string[i] = toupper(string[i]);
+	}
 }

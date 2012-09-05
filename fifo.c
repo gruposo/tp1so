@@ -3,18 +3,16 @@
 #include <fcntl.h>
 #include "ipc.h"
 
-int
+void
 IPC_init(int pid, char * ipc_path) {
 	char fifo_path[PATH_SIZE];
 	
 	sprintf(fifo_path, "%s%s%d", "/tmp",ipc_path, pid);
 	
 	if(mkfifo(fifo_path, 0666) == -1) {
-		printf("%s", "Couldn't create fifo\n");
+		printf("Couldn't create fifo\n");
 		exit(-1);
 	}
-	
-	return 0;
 }
 
 int 

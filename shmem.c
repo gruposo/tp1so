@@ -5,13 +5,12 @@
 #include <sys/shm.h>
 #include <semaphore.h>
 #include <fcntl.h>
+#include "shmem.h"
 
 static sem_t * public_sem_wr = NULL;
 static sem_t * public_sem_rd = NULL;
-void copyToMsg(int fd, message_t * message);
-void copyFromMsg(int fd, message_t * message);
 
-int
+void
 IPC_init(int pid, char * ipc_path) {
 	if(pid == SERVER) {
 	 	char public_path_wr[PATH_SIZE];
@@ -25,7 +24,6 @@ IPC_init(int pid, char * ipc_path) {
 		sprintf(private_path, "%s%d", ipc_path, pid);
 		sem_t * private_sem = sem_open(private_path, O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH, 0);
 	}
-	return 0;
 }
 
 int
