@@ -1,9 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <string.h>
 #include "executor.h"
-#include "nodeADT.h"
 
 void execute(nodeADT node, Block * my_block) {
 

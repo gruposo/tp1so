@@ -1,7 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/msg.h>
-#include <errno.h>
 #include "ipc.h"
 
 int firstTime = 1;

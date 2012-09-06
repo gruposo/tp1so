@@ -2,16 +2,13 @@
 #define EXECUTOR_H_
 
 #include "nodeADT.h"
-
-#define MEMSIZE 1000
-#define FALSE 0
-#define TRUE 1
+#include "library.h"
 
 typedef struct {
 	int param;
 	int boolean;
 	int current;
-	int memory[1000];
+	int memory[MEMSIZE];
 } Block;
 
 void execute(nodeADT node, Block * my_block);

@@ -1,9 +1,12 @@
-#ifndef serverGeneric_H_
-#define serverGeneric_H_
+#ifndef SERVERGENERIC_H_
+#define SERVERGENERIC_H_
 
-#define PATH_SIZE 32
+#include "parser.h"
+#include "serializer.h"
+#include "ipc.h"
+#include "executor.h"
 
-void programAttention(FILE * file, int pid);
+void programAttention(char * filepath, int pid);
 void catchSignal(int signal);
 
 #endif

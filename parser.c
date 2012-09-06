@@ -1,7 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <string.h>
 #include "parser.h"
 
 nodeADT parse(FILE * file, int state) {
@@ -49,19 +45,19 @@ nodeADT parse(FILE * file, int state) {
 			if (vecBalance.numbers[vecBalance.pos] != '(') {
 				if (state) {
 					if (index != 0 && com == empty) {
-						fatal();
+						fatal("Invalid parser\n");
 					}
 					fseek(file, -1, SEEK_CUR);
 					return first;
 				} else {
-					fatal();
+					fatal("Invalid parser\n");
 				}
 			} else {
 				vecBalance.numbers[vecBalance.pos] = 0;
 			}
 			if (index == 0) {
 				if (com != cz) {
-					fatal();
+					fatal("Invalid parser\n");
 				} else {
 					addParam(current, -1);
 				}
@@ -70,7 +66,7 @@ nodeADT parse(FILE * file, int state) {
 				if (com == endif) {
 					if (vecIf.numbers[(vecIf.pos) - 1]
 							!= toInt(string, index)) {
-						fatal();
+						fatal("Invalid parser\n");
 					}
 					(vecIf.pos) -= 1;
 
@@ -83,7 +79,7 @@ nodeADT parse(FILE * file, int state) {
 				} else if (com == endwhile) {
 					if (vecWhile.numbers[(vecWhile.pos) - 1]
 							!= toInt(string, index)) {
-						fatal();
+						fatal("Invalid parser\n");
 					}
 					(vecWhile.pos) -= 1;
 
@@ -94,7 +90,7 @@ nodeADT parse(FILE * file, int state) {
 					addParam(current, getParam(returnTO));
 
 				} else if (com == cz) {
-					fatal();
+					fatal("Invalid parser\n");
 				} else {
 					hasNumbers(string, index);
 
@@ -122,7 +118,7 @@ nodeADT parse(FILE * file, int state) {
 				addExe(current, parse(file, TRUE));
 
 			} else {
-				fatal();
+				fatal("Invalid parser\n");
 			}
 			break;
 		case ' ':
@@ -136,66 +132,9 @@ nodeADT parse(FILE * file, int state) {
 		}
 	}
 	if (vecBalance.numbers[vecBalance.pos] != 0) {
-		fatal();
+		fatal("Invalid parser\n");
 	}
 	return first;
-}
-
-char *
-resizeMemChar(int index, char * vec) {
-	char * aux;
-	if ((index % BLOQUE) == 0) {
-		aux = realloc(vec, (index + BLOQUE) * sizeof(char));
-		if (aux == NULL ) {
-			printf(
-					"There was a problem allocating memory. Try again\n");
-			exit(-1);
-		} else {
-			vec = aux;
-		}
-	}
-	return vec;
-}
-
-int *
-resizeMemInt(int index, int * vec) {
-	int * aux;
-	if ((index % BLOQUE) == 0) {
-		aux = realloc(vec, (index + BLOQUE) * sizeof(int));
-		if (aux == NULL ) {
-			printf(
-					"There was a problem allocating memory. Try again\n");
-			exit(-1);
-		} else {
-			vec = aux;
-		}
-	}
-	return vec;
-}
-
-void hasNumbers(char * vec, int dim) {
-	int i;
-	for (i = 0; i < dim; i++) {
-		if (!isdigit(vec[i])) {
-			fatal();
-		}
-	}
-}
-
-int toInt(char*string, int index) {
-	int N = 0;
-	int mult = 1;
-	int i;
-
-	for (i = index - 1; i >= 0; i--) {
-		if (!(string[i] >= '0') || !(string[i] <= '9')) {
-			fatal();
-		}
-		N += ((string[i] - '0') * mult);
-		mult *= 10;
-	}
-
-	return N;
 }
 
 Commands getCommand(char * string, int index) {
@@ -220,19 +159,7 @@ Commands getCommand(char * string, int index) {
 	} else if (strncmp(string, "ENDWHILE", index) == 0) {
 		com = endwhile;
 	} else {
-		fatal();
+		fatal("Invalid parser\n");
 	}
 	return com;
-}
-
-void fatal() {
-	printf("Invalid parser. Please make another file\n");
-	exit(-1);
-}
-
-void toUpperString(char * string, int index) {
-	int i;
-	for (i = 0; i < index; i++) {
-		string[i] = toupper(string[i]);
-	}
 }
