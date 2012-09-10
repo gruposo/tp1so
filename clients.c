@@ -1,25 +1,25 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include <unistd.h>
-#define PATH_SIZE 1000
+#include "library.h"
 
-int main(void) {
+int main(int argc, char ** argv) {
 	char client[PATH_SIZE];
-	//char client2[PATH_SIZE];
-	int pid, i,j;
+	int pid, i, j, qty, size;
 
-	//sprintf(client1, "%s%d%s", "archivo", 2, ".txt");
-	//sprintf(client2, "%s%d%s", "archivo", 3, ".txt");
+	if (argc != 2) {
+		fatal("Invalid parameters\n");
+	}
 
+	size = strlen(argv[1]);
+	hasNumbers(argv[1], size);
+	qty = toInt(argv[1], size);
 
-	for (i = 0; i < 500; i++) {
-		j = i % 5;
-		sprintf(client, "%s%d", "archivo", j);  
+	for (i = 0; i < qty; i++) {
+		j = i % 3;
+		sprintf(client, "%s%d%s", "archivo", j, ".txt");
 		switch (pid = fork()) {
 
 		case -1:
-			printf("Server couldn't fork\n");
-			exit(-1);
+			fatal("Server couldn't fork\n");
 			break;
 		case 0:
 			execl("./clientGeneric", "clientGeneric", client, NULL );

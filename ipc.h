@@ -1,17 +1,12 @@
 #ifndef IPC_H_
 #define IPC_H_
 
-#define SERVER 1025L
-#define MAX_BUFFER_SIZE 4000
-#define VEC_SIZE 1000
-#define PATH_SIZE 32
+#include "library.h"
 
 typedef struct {
 	int pid;
 	char buffer[MAX_BUFFER_SIZE];
-	int contenttypesize;
-	int contentsize;
-	int sockaddr_p;
+	int error;
 } message_t;
 
 void IPC_init(int pid, char * ipc_path);

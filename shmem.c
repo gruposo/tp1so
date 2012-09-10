@@ -1,11 +1,3 @@
-#include "ipc.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <sys/shm.h>
-#include <semaphore.h>
-#include <fcntl.h>
-#include <unistd.h>
 #include "shmem.h"
 
 static sem_t * public_sem_wr = NULL;

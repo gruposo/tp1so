@@ -1,6 +1,8 @@
 #ifndef NODEADT_H_
 #define NODEADT_H_
 
+#include"library.h"
+
 typedef struct nodeCDT * nodeADT;
 nodeADT newNode(int instr);
 int getOperation(nodeADT node);
