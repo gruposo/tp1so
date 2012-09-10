@@ -1,6 +1,30 @@
 \documentclass[a4paper, 10pt]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[spanish]{babel}
+\usepackage{graphicx}
+\usepackage{wrapfig}
+\usepackage{color}
+\usepackage{listings}
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{frame=tb,
+  language=C,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true
+  tabsize=3
+}
 
 \renewcommand{\shorthandsspanish}{}
 
@@ -57,68 +81,167 @@ Para resolver este trabajo, se utilizó el lenguaje \textit{C} principalmente de
 De acuerdo al enunciado, el objetivo de este trabajo es familiarizarse con el uso de sistemas cliente-servidor concurrentes, implementando el servidor mediante la creación de procesos hijos utilizando {\tt fork()} y mediante la creación de threads. Al mismo tiempo, ejercitar el uso de los distintos tipos de primitivas de sincronización y comunicación de procesos (IPC) y manejar con autoridad el filesystem de \textit{Linux} desde el lado usuario.\\
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Consideraciones realizadas}
+\section{Diseño e implementación}
 
-\begin{itemize}
+\subsection{Estructuras de datos}
+Al momento de recibir el archivo de texto como única información, pensamos en la forma de traducir las instrucciones en algo que pueda ser manipulado ágilmente por un programa. Entonces desarrollamos una estructura de datos sencilla consistente en un “nodo”, el cual es capaz de almacenar información y de conectarse con otros nodos como él. Gracias a esta estructura y, dependiendo del flujo que siga el programa que ingresa al server, se podrán formar estructuras con forma de listas, árboles o grafos, aunque de ahora en adelante nos referiremos a él como “el grafo”, ya que es éste el término más general. A modo de ejemplo, se incluye en el apéndice un programa típico junto con su respectivo árbol de ejecución (ver página \ref{apendice}).\\
 
-\item El programa permite que se pase una única opción por línea de comando por vez. Una invocación válida es:
-\\
-\\\begin{tt}
-alchemy -b steam
-\end{tt}\\\\
-Pero una invocación inválida es:
-\\
-\\\begin{tt}
-alchemy -b steam -e mud -t
-\end{tt}\\\\
-La única excepción ocurre cuando se especifican archivos .name y/o .magic. Ejemplos de invocación permitidos son:
-\\
-\\\begin{tt}
-alchemy -t -n misnombres.name -m misarchivos.magic\\
-alchemy -n misnombres.name -m misarchivos.magic -t\\
-alchemy -n misnombres.name -t -m misarchivos.magic\\
-alchemy -n misnombres.name -m misarchivos.magic -b mud\\
-alchemy -n misnombres.name -e steam\\
-alchemy -b rain -m misarchivos.magic
-\end{tt}\\\\
-En todos estos casos, se toman los elementos y las combinaciones de los archivos ingresados. Si se ingresa sólo el archivo de combinaciones por ejemplo, se toman los nombres de los elementos del archivo predeterminado.\\
-Un ejemplo no permitido es el siguiente:\\
-\\\begin{tt}
-alchemy -n misnombres.name -e steam -t\\
-\end{tt}\\\\
+Además se utiliza una estructura Stack de manera auxiliar durante la formación del grafo, para poder conectar el principio con el final de un ciclo o condición, al mismo tiempo que se respeta el anidamiento de estas instrucciones.\\
+	
+En cuanto al envío y recepción de mensajes, se creó una estructura llamada message\_t. La misma se forma así:\\
 
-\item Se considera que un elemento está formado por una o más letras minúsculas y mayúsculas, permitiendo espacios entre medio. No se pueden incluir números ni símbolos como parte de un nombre de elemento, a excepción del signo de admiración !. Estos nombres son case-sensitive, es decir, los elementos "air", "Air" y "AIR" son todos distintos para el programa.\\
+\begin{lstlisting}
+#define MAX_BUFFER_SIZE 4000
+typedef struct {
+	int pid;
+	char buffer[MAX_BUFFER_SIZE];
+	int error;
+} message_t;
+\end{lstlisting}
+\vspace{1.5em}
+\par Se ha decidido que todos los IPCs reciban y envíen esta misma estructura. De este modo es posible cambiar el IPC que se utiliza sin que se altere ningún otro aspecto del programa. Simplemente se debe compilar toda la aplicación con el archivo .C correspondiente al IPC deseado.\\
 
-\item Se decidió que la cantidad de espacios entre palabras de un nombre de elemento es irrelevante. Haya un sólo espacio, tres, o cinco, siempre se tomará un único espacio, por lo que esos tres casos serían equivalentes. Por ejemplo, "light \, \, bulb" equivale a ingresar "light bulb" ya que los cuatro espacios ingresados se transforman en un único. Esta decisión surge de que al ingresar parametros por línea de comando en Java, se recibe en el args[ ] las palabras ya separadas, ignorando todos los espacios adicionales entre ellas.\\
-Ejemplos del comportamiento del programa son:\\
-\\\begin{tt}
-alchemy -e light \, \, bulb
-\end{tt}\\\\
-Se devuelven todos los elementos que se puedan formar a partir de "light bulb".\\
-\\\begin{tt}
-light \, \, bulb + light bulb
-\end{tt}\\\\
-Se devuelve el elemento resultante de combinar "light bulb" consigo mismo.\\
-A raíz de esta decisión, se devuelve un mensaje de error (elemento repetido) si en el archivo .name se presenta una situación similar a:\\
-\\\begin{tt}
-fire\\light \, \, bulb\\light bulb
-\end{tt}\\
-\end{itemize}
+La variable entera pid almacena el process id (es decir el número del proceso) del cliente que envía su pedido. Más adelante en este informe se explica el motivo de uso de este número.\\
+
+La variable error se utiliza para que el servidor, al devolver la respuesta al cliente, pueda informar si todo salió bien o hubo algún error, ya sea en el procesamiento del archivo o durante la ejecución del programa. El vector buffer es el encargado de almacenar el path del archivo a leer y posteriormente, el vector de respuesta. Se eligió como tamaño 4000 ya que dicha respuesta sería un vector de enteros de 1000 posiciones lo cual ocupa dicho tamaño si lo representamos como un vector de caracteres. Ampliar el tamaño de este buffer consistiría en simplemente modificar el valor del define MAX\_BUFFER\_SIZE.\\
+
+\subsection{Procesos y paralelismo}
+
+\par Una de las características fundamentales de nuestra aplicación es que es capaz de atender a un gran número de clientes en simultáneo (limitado generalmente por los recursos de hardware de la máquina y por las características del IPC utilizado), al mismo tiempo que se es capaz de continuar “escuchando” en caso de que se produzcan más llamadas de otros clientes.\\
+
+Esto es posible gracias a que se utilizó la herramienta fork provista por Unix, que nos permitió crear servidores idénticos al original, capaces de dedicarse exclusivamente a la atención del cliente que los llamó, para luego terminar su ejecución. El código necesario (pseudocódigo)  para llevar a cabo esta tarea es el siguiente:\\
+
+\newpage
+\begin{lstlisting}
+while (TRUE) {
+Recibo el pedido de un cliente.
+	switch (pid = fork()) {
+	case -1:
+		ERROR;
+		exit(-1);
+		break;
+	case 0:
+		Ejecutar programa;
+		exit(1);
+	default:
+		break;
+	}
+}
+\end{lstlisting}
+\vspace{1.5em}
+
+\subsection{Esquema de comunicaciones}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=\textwidth]{comunicaciones}
+\caption{Representación gráfica de las comunicaciones entre clientes y servidor}
+\noindent
+\end{figure}
+
+Como se puede observar en el gráfico, hay un servidor padre corriendo de fondo en todo momento. En cuanto llega un cliente, el mismo se conecta a través del IPC público y envía el mensaje correspondiente. Cuando el servidor recibe el mensaje, éste se realiza un fork de sí mismo, de manera que sigue escuchando a nuevos clientes mientras atiende al cliente que le llegó. Una vez que el servidor hijo termina de atender al cliente, devuelve la respuesta por el IPC privado (salvo en message queue) y este servidor hijo termina su ejecución. El cliente que recibe la respuesta, la imprime en un archivo y también finaliza su ejecución.\\
+
+\newpage
+\subsection{FIFO}
+Tal como lo pedía la consigna, se podían utilizar tanto pipes como fifos en esta parte. Luego de leer acerca de ellos y comprender sus diferencias se llegó a la conclusión de que los fifos (debido a sus características) nos serían de mayor ayuda que los pipes. Esto se debe a que los fifos, al ser simplemente pipes con nombre, nos permiten identificarlos mediante el mismo a la hora de comunicar varios clientes con un servidor. La lógica que se llevó a cabo para implementarlos fue establecer un número fijo para el servidor para que de esta manera cualquier cliente pueda conocer su canal. Así, se crea un fifo público por el cual todos los clientes envían sus datos al servidor, y luego, cada cliente recibe la respuesta por su propio canal privado.\\
+
+Los fifos (que se almacenan en el directorio /tmp) se nombran con la forma ipc(pid), donde pid es el número del proceso. Como se mencionó previamente, al establecer un número fijo para el servidor, cada cliente tiene acceso al canal público. Cuando un cliente se comunica con el servidor, el mismo abre un canal privado y envía a través del público su pid para que de esta manera, el servidor luego pueda saber por dónde enviar la respuesta correspondiente. Esto nos permite que un cliente no reciba la respuesta de un programa que él no envió.\\
+
+\subsection{Message Queue}
+
+Partiendo del IPC FIFO, resultó bastante fácil desarrollar la cola de mensajes, ya que sólo se trató de una adaptación. Fue por eso que en un principio se decidió crear una cola de mensajes pública y una privada para devolver el resultado a cada cliente.\\
+Luego de pensarlo un poco nos dimos cuenta de que era muy ineficiente hacer esto ya que se estaba desaprovechando en gran medida la capacidad de la cola de mensajes de manejarse asignando prioridades a sus usuarios. Fue por eso que finalmente se logró manejar tanto al servidor como a todos los clientes con una única cola de mensajes. Nuevamente, aprovechando la idea de que cada proceso tiene su propio pid (y que el número del servidor es conocido por todos los clientes) se decidió que cada cliente sería capaz de enviar sus datos a través de la cola de mensajes con prioridad “server”, para que el servidor los reciba con dicha prioridad. De esta manera, un cliente no sacaría lo que otro cliente puso en la cola. Asimismo, una vez que se terminó de ejecutar el programa, el servidor introduce en la cola la respuesta con prioridad “pid del cliente” y dicho cliente la levanta con la misma prioridad, asegurándose así que un cliente no reciba una respuesta errónea o de otro cliente.
+
+\subsection{Shared memory}
+
+Para implementar este IPC se siguió una lógica parecida a la de los fifos y la cola de mensajes, es decir, contamos con una zona de memoria pública donde todos los clientes pueden escribir, y una zona de memoria privada para cada cliente en la cual se recibe la respuesta. \\
+
+A diferencia de un fifo, que automáticamente se bloquea, en este caso hubo que implementar semáforos para lograr sincronización. De otro modo, un cliente podría levantar el mensaje que otro cliente envió, o el servidor podría leer datos erróneos de una zona de memoria que aún no fue escrita.\\
+
+Se utilizaron semáforos a los cuales se les asignó un nombre, y se almacenan en \/dev\/shm con la identificación ipc(pid), siendo pid el número de proceso. De esta forma, cada proceso puede acceder al semáforo deseado utilizando su pid.\\
+
+La implementación de los semáforos se llevó a cabo de la siguiente forma. Se crearon dos semáforos públicos (uno de escritura y uno de lectura) y un semáforo privado por cada cliente. Para comprender mejor el funcionamiento de los semáforos detallamos a continuación un pseudocódigo de lo que hace el servidor y uno de lo que hace el cliente.\\
+
+\begin{lstlisting}
+Servidor
+Abre el canal publico;
+While(1) {
+	Mensaje = recibir();
+	Fork() {
+		padre: sigue escuchando;
+		hijo: atiende el programa;
+	}	
+}
+
+Hijo() {
+	Conexion al canal privado;
+	Envia(respuesta);
+}
+\end{lstlisting}
+\vspace{1.5em}
+
+\begin{lstlisting}
+Cliente
+Conexion al canal publico;
+Abre el canal privado;
+Envia(mensaje por canal publico);
+Recibe(respuesta por el canal privado);
+\end{lstlisting}
+\vspace{1.5em}
+
+Al comenzar el programa el servidor siempre está en ejecución en background. Cuando un cliente llega, se conecta al mismo y así comienza el envío y la recepción de datos. Al comenzar el servidor corriendo de fondo, si no hubiera semáforos, el mismo leería datos erróneos de la zona de memoria, ya que nadie ha escrito aún en la zona pública. Es por eso que el semáforo público de lectura comienza en 0, para que el servidor espere a que algún cliente escriba y así levante dicho semáforo. Por otro lado, el semáforo público de escritura comienza en 1 para que el primer cliente que llegue pueda escribir. Cuando un cliente escribe baja el semáforo de escritura y lectura asegurándose así que nadie escriba en ese momento ni que nadie intente leer.\\
+
+El semáforo privado es más sencillo ya que sólo se relaciona con un cliente. Dicho semáforo comienza en 0 de manera que el cliente se queda esperando que el servidor escriba en la zona de memoria privada para poder leer. En el momento en que el servidor escribe, dicho semáforo se levanta y así el cliente que lo tiene asignado puede leer los datos que le corresponden.\\
+
+En cuanto al acceso a la memoria, la misma se manejó a través del pid ya que la llamada shmget recibe un key. En este caso, como se mencionó, se utilizó el pid como base para construir el key.\\
+
+\subsection{Sockets}
+
+Este fue el último de los IPCs implementados. Como ya se había logrado realizar de manera genérica el resto de los IPCs (definiendo un ipc.h a modo de “interfaz” e implementando cada IPC según su uso), tuvimos que lograr adaptar este mismo al código genérico que estaba hecho.\\
+
+Comenzamos intentando implementar TCP el cual nos trajo muchos conflictos debido a que un cliente al conectarse al canal público automáticamente abría un canal de respuesta.\\
+
+Allí decidimos cambiar la implementación por UDP con dominio UNIX. Esto nos facilitó seguir el esquema de código genérico, ya que usa la creación de sockets mediante archivos. De esta manera, creamos en el directorio /tmp un socket con el nombre ipc(pid) donde pid es el número de proceso. Igual que en los IPCs anteriores, al conocer el número de identificación del servidor, cada cliente sabe a qué socket conectarse, y a su vez el servidor sabe en qué socket debe depositar su respuesta.\\
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Descripción del desarrollo del trabajo}
+\newpage
+\section{Inconvenientes encontrados}
 
-Para este trabajo se eligió Java, en parte para aprovechar la orientación a objetos. Cada elemento es una instancia de la clase Element, que contiene un string con su nombre, un map "combinations" con todas las combinaciones posibles (key: elemento con quien se combina, value: elemento obtenido de la combinación), y un set "origins" con todos los elementos con los cuales se puede obtener el elemento actual. \\
-La clase Alchemy contiene un map "elements" que agrupa todos los elementos posibles para combinar con un número entero que corresponde a su número de línea en el archivo .name. 
+En un principio nos resultó muy difícil comprender qué tipos de datos es posible pasar a través de un IPC. Los primeros diseños requerían el pasaje de punteros y estructuras complicadas y, luego de investigar y asesorarnos con alumnos de cursadas anteriores, entendimos que no es posible pasar datos que involucren el uso de punteros a través de un IPC. Según entendimos, esto ocurre porque un proceso no tiene acceso a la zona de memoria del proceso que le pasa los datos, dejando inutilizados a los punteros.\\
 
-%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Dificultades encontradas}
+Fue por eso que finalmente, en lugar de enviar la estructura del grafo previamente parseada, decidimos que sería mucho más conveniente enviar simplemente un string con el path del archivo a leer, encargándose el servidor de parsearlo, construir el grafo a partir de él y ejecutarlo, para luego devolver la respuesta.\\
 
-Al comenzar a desarrollar los parsers, se intentó usar estados de JFlex pensando que facilitarían el manejo de expresiones y producirían un código más legible. Sin embargo, expresiones regulares "largas" resultaron más flexibles y sencillas para manejar.\\
-
-Con el uso de macros sucedió lo contrario. No se las consideró desde un principio, hasta que el código se tornó repetitivo y se decidió simplificarlo con su uso.
+Por otra parte, analizamos la posibilidad de paralelizar la ejecución del grafo utilizando threads, pero luego de pensarlo mucho, y de consultar con la cátedra, no encontramos forma de llevar esto a cabo, más que nada porque las instrucciones que es capaz de ejecutar la aplicación dependen una de otra en gran medida. Es por esto que finalmente decidimos que no valía la pena sumar complejidad al código por algo que no agregaría eficiencia. \\
 
 %%%%%%%%%%%%%%%%%%%%%
 \section{Conclusiones}
-Este trabajo fue el primer acercamiento a Lex por parte de los integrantes del grupo. Por más que no se haya hecho uso de las herramientas más avanzadas y desconocidas de Lex, se logró aprender su uso y comprender sus beneficios como parser. Viendo las ventajas frente a otros métodos más básicos de parseo, se espera volver a usar Lex en trabajos futuros. 
+
+El trabajo sirvió en gran medida para comprender el uso de los IPCs. Pudimos notar que los IPCs son de fundamental importancia para trabajar con varios procesos a la vez. Hasta el momento nunca los habíamos usado por ignorar su utilidad. Definitivamente será una herramienta que tendremos en cuenta ya que nos permite lograr ciertas funciones que hasta ahora hacíamos de forma ineficiente. Por ejemplo, hemos llegado a pasar un mensaje mediante la persistencia de datos en un archivo de texto.\\
+
+En cuanto a la performance de los IPCs creados, tal y como se esperaba, el IPC más rápido fue shared memory. Esto se observó al correr un número bastante grande de clientes, específicamente 10.000. Y tiene sentido ya que se maneja un bloque de memoria directamente, por lo cual el acceso es muy rápido. El IPC que encontramos más lento fue la cola de mensajes, aunque en este caso hay que notar también que a diferencia del resto de los IPCs, se utilizó solo una cola de mensajes tanto para el canal público como para los privados, por lo cual la misma debía manejar demasiadas cosas.\\
+
+%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\section{Apéndice}
+\label{apendice}
+
+Ejemplo de un programa a ejecutar junto con el árbol correspondiente:\\
+
+\begin{lstlisting}
+INC(20)
+MR(2)
+WHILE(2, INC(20) IF(2, INC(20)) ML(3) ENDIF(2))
+DEC(30)
+INC(20)
+ENDWHILE(2)
+\end{lstlisting}
+\vspace{1.5em}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=\textwidth]{arbol}
+\caption{Representación gráfica del árbol de ejecución}
+\noindent
+\end{figure}
+
 \end{document}
