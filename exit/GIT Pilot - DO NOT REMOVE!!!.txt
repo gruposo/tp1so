@@ -1,0 +1,1 @@
+El unico proposito de este archivo es mantener la existencia del directorio "exit" en el GitHub, por lo tanto no debe ser borrado.
