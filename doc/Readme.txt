@@ -17,3 +17,6 @@ Para finalizar el servidor corra el siguiente comando:
 
 Para eliminar los ejecutables generados corra el siguiente comando:
 make clean  
+
+++IMPORTANTE++
+La salida de la ejecucion se almacenara en la carpeta "exit", ubicada en el root de la aplicacion.
