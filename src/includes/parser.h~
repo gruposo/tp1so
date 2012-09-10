@@ -16,5 +16,6 @@ typedef enum {
 
 nodeADT parse(FILE * file, int state);
 Commands getCommand(char * string, int index);
+void freeParser(char * string, int * vecWhile, int * vecIf, int * vecBalance, Stack stack);
 
 #endif

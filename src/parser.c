@@ -1,4 +1,4 @@
-#include "parser.h"
+#include "includes/parser.h"
 
 nodeADT parse(FILE * file, int state) {
 	nodeADT first = NULL;
@@ -48,6 +48,7 @@ nodeADT parse(FILE * file, int state) {
 						fatal("Invalid parser\n");
 					}
 					fseek(file, -1, SEEK_CUR);
+					freeParser(string, vecWhile.numbers, vecIf.numbers, vecBalance.numbers, &stack);
 					return first;
 				} else {
 					fatal("Invalid parser\n");
@@ -134,6 +135,7 @@ nodeADT parse(FILE * file, int state) {
 	if (vecBalance.numbers[vecBalance.pos] != 0) {
 		fatal("Invalid parser\n");
 	}
+	freeParser(string, vecWhile.numbers, vecIf.numbers, vecBalance.numbers, &stack);
 	return first;
 }
 
@@ -162,4 +164,13 @@ Commands getCommand(char * string, int index) {
 		fatal("Invalid parser\n");
 	}
 	return com;
+}
+
+void
+freeParser(char * string, int * vecWhile, int * vecIf, int * vecBalance, Stack * stack) {
+	free(vecWhile);
+	free(vecIf);
+	free(vecBalance);
+	free(string);
+	stack_clear(stack, 1);
 }

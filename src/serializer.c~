@@ -1,0 +1,47 @@
+#include "/includes/serializer.h"
+
+char * serialize_msg(message_t * msg) {
+
+	int length = sizeof(int) + MAX_BUFFER_SIZE * sizeof(char);
+	char * serialized_msg = malloc(length);
+
+	memcpy(serialized_msg, &(msg->pid), sizeof(int));
+
+	int offset = sizeof(int);
+	memcpy(serialized_msg + offset, msg->buffer, MAX_BUFFER_SIZE);
+
+	return serialized_msg;
+
+}
+
+char * serialize_mem(int * mem) {
+
+	int length = sizeof(int) * MEMSIZE;
+	char * serialized_mem = calloc(length, sizeof(char));
+
+	memcpy(serialized_mem, mem, length * sizeof(char));
+
+	return serialized_mem;
+}
+
+message_t * deserialize_msg(char * serialized_msg) {
+
+	message_t * msg = calloc(1, sizeof(message_t));
+
+	memcpy(&msg->pid, serialized_msg, sizeof(int));
+
+	int offset = sizeof(int);
+	memcpy(&msg->buffer, serialized_msg + offset, MAX_BUFFER_SIZE);
+
+	return msg;
+}
+
+int * deserialize_mem(char * serialized_mem) {
+
+	int length = sizeof(int) * MEMSIZE;
+	int * mem = calloc(length, sizeof(char));
+
+	memcpy(mem, serialized_mem, length);
+
+	return mem;
+}

@@ -1,4 +1,4 @@
-#include "clientGeneric.h"
+#include "/includes/clientGeneric.h"
 
 int main(int argc, char * argv[]) {
 	message_t message, message2;
@@ -32,6 +32,7 @@ int main(int argc, char * argv[]) {
 	}
 
 	IPC_close(fd2, path, pid);
+	free(ans);
 	return 0;
 }
 
@@ -40,7 +41,7 @@ void printResult(int pid, char * path, int * ans) {
 	char fileName[PATH_SIZE];
 	int i;
 
-	sprintf(fileName, "./exit/%s%d", "client", pid);
+	sprintf(fileName, "../exit/%s%d", "client", pid);
 	file = fopen(fileName, "w");
 	if (file == NULL ) {
 		printf("File from client %d for answer couldn't be created\n", pid);

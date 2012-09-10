@@ -1,5 +1,5 @@
 #include <unistd.h>
-#include "library.h"
+#include "/includes/library.h"
 
 int main(int argc, char ** argv) {
 	char client[PATH_SIZE];
@@ -15,7 +15,7 @@ int main(int argc, char ** argv) {
 
 	for (i = 0; i < qty; i++) {
 		j = i % 3;
-		sprintf(client, "%s%d%s", "archivo", j, ".txt");
+		sprintf(client, "%s%d%s", "../doc/archivo", j, ".txt");
 		switch (pid = fork()) {
 
 		case -1:

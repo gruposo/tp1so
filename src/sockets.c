@@ -1,4 +1,4 @@
-#include "ipc.h"
+#include "includes/ipc.h"
 
 void
 IPC_init(int pid, char * ipc_path) {

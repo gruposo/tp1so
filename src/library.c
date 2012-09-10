@@ -1,4 +1,4 @@
-#include "library.h"
+#include "includes/library.h"
 
 void fatal(char * error) {
 	printf("%s", error);

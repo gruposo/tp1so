@@ -1,4 +1,4 @@
-#include "nodeADT.h"
+#include "includes/nodeADT.h"
 
 struct nodeCDT {
 
@@ -41,7 +41,6 @@ nodeADT newNode(int command) {
 	nodeADT resp = malloc(sizeof(struct nodeCDT));
 
 	if (resp == NULL) {
-
 		fprintf(stderr, "Memoria insuficiente\n");
 		exit(1);
 	}

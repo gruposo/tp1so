@@ -1,4 +1,4 @@
-#include "shmem.h"
+#include "/includes/shmem.h"
 
 static sem_t * public_sem_wr = NULL;
 static sem_t * public_sem_rd = NULL;

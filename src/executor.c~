@@ -1,4 +1,4 @@
-#include "executor.h"
+#include "/includes/executor.h"
 
 void execute(nodeADT node, Block * my_block) {
 
@@ -7,10 +7,6 @@ void execute(nodeADT node, Block * my_block) {
 	}
 
 	int operation = getOperation(node);
-
-//	int param = getParam(node);
-
-//	int N = (param >= MEMSIZE) ? (MEMSIZE - 1) : param;
 
 	void (*vecFun[])(nodeADT,
 			Block *)= {_inc, _dec, _mr, _ml, _cz, _if, _endif, _while, _endwhile
